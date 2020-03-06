@@ -1,0 +1,61 @@
+// The generated lexer module will start with this code
+{
+module CalculatorLexer
+open FSharp.Text.Lexing
+open System
+// open the module that defines the tokens
+open CalculatorParser
+}
+
+// We define macros for some regular expressions we will use later
+let digit       = ['0'-'9']
+let num         = digit+
+let x           = ['a'-'z' 'A'-'Z'] ['a'-'z' 'A'-'Z' \d ]*
+let boolean     = true | false
+let whitespace  = [' ' '\n' '\r' '\t']
+
+// We define now the rules for recognising and building tokens
+// for each of the tokens of our language we need a rule
+// NOTE: rules are applied in order top-down. 
+//       This is important when tokens overlap (not in this example)
+rule tokenize = parse
+// deal with tokens that need to be ignored (skip them)
+
+// deal with tokens that need to be built
+| num           { NUM(Double.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
+| x             { NAME }
+| boolean       { BOOL(Boolean.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
+| whitespace    {WHITESPACE}
+
+| ":="          { ASSIGN }
+| ';'           { SEPERATOR }
+| "if"          { IF }
+| "fi"          { FI }
+| "do"          { DO }
+| "od"          { OD }
+
+| "->"          { FUNC }
+| "[]"          { CONC }
+
+| '+'           { PLUS }
+| '-'           { MINUS }
+| '*'           { TIMES }
+| '/'           { DIV }
+| '^'           { POW }
+| '('           { LPAR }
+| ')'           { RPAR }
+
+| '&'           { AND }
+| '|'           { OR }
+| "&&"          { ANDH }
+| "||"          { ORH }
+| '!'           { NOT }
+| '='           { EQUAL }
+| "!="          { NEQUAL }
+| '>'           { GT }
+| ">="          { GTE }
+| '<'           { LT }
+| "<="          { LTE }
+
+
+| eof           { EOF }
