@@ -16,6 +16,7 @@ open CalculatorLexer
 let rec eval e =
   match e with
     | AssignExpr(x,y) -> //todo
+    | AssignArrExpr(x,y) -> //todo
     | SeperatorExpr(x,y) -> //todo
     | IfExpr(x) -> //todo
     | DoExpr(x) -> //todo

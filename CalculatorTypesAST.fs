@@ -4,6 +4,7 @@ module CalculatorTypesAST
 
  type C =
   | AssignExpr of (X * a)
+  | AssignArrExpr of (a * a)
   | SeperatorExpr of (C * C)
   | IfExpr of (GC)
   | DoExpr of (GC)
@@ -15,6 +16,7 @@ module CalculatorTypesAST
  type a = 
   | N of int
   | X of string
+  | A of a
   | PlusExpr of (a * a)
   | MinusExpr of (a * a)
   | TimesExpr of (a * a)

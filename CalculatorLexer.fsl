@@ -26,6 +26,7 @@ rule tokenize = parse
 | x             { NAME }
 | boolean       { BOOL(Boolean.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
 | whitespace    {WHITESPACE}
+| 'A'           { ARRAY }
 
 | ":="          { ASSIGN }
 | ';'           { SEPERATOR }
@@ -44,6 +45,8 @@ rule tokenize = parse
 | '^'           { POW }
 | '('           { LPAR }
 | ')'           { RPAR }
+| '['           { LBRACK }
+| ']'           { RBRACK }
 
 | '&'           { AND }
 | '|'           { OR }
