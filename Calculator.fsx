@@ -13,7 +13,7 @@ open CalculatorLexer
 
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)
-let variables = Map.empty.Add('x', a x);;
+let variables = Map.empty.Add('x', x);;
 let arrays = Map.empty.Add('a', [|0|]);;
 let rec eval e = //Maybe split eval up into two function, we need tob e able to return numbers (in arithmetic expressions), boolean epressions (2>3), but also a memory in case of memory-assignemnts such as x:=2 or A[2]=1.
   //only way that it is possible to reutrn these different types is to create seperate functions.

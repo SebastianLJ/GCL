@@ -22,7 +22,7 @@ rule tokenize = parse
 // deal with tokens that need to be ignored (skip them)
 
 // deal with tokens that need to be built
-| num           { NUM(Double.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
+| num           { NUM(Integer.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
 | x             { NAME }
 | boolean       { BOOL(Boolean.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
 | whitespace    {WHITESPACE}

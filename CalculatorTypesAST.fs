@@ -1,21 +1,12 @@
 // This file implements a module where we define a data type "expr"
 // to store represent arithmetic expressions
 module CalculatorTypesAST
+open System
 
- type C =
-  | AssignExpr of (X * a)
-  | AssignArrExpr of (a * a)
-  | SeperatorExpr of (C * C)
-  | IfExpr of (GC)
-  | DoExpr of (GC)
-
- type GC =
-  | FuncExpr of (b * C)
-  | ConcExpr of (GC * GC)
 
  type a = 
   | N of int
-  | X of string
+  | X of String
   | A of a
   | PlusExpr of (a * a)
   | MinusExpr of (a * a)
@@ -37,3 +28,14 @@ module CalculatorTypesAST
   | GteExpr of (b * b)
   | LtExpr of (b * b)
   | LteExpr of (b * b)
+ type GC =
+  | FuncExpr of (b * C)
+  | ConcExpr of (GC * GC)
+ and C =
+  | AssignExpr of (String * a)
+  | AssignArrExpr of (String * a * a)
+  | SeperatorExpr of (C * C)
+  | IfExpr of (GC)
+  | DoExpr of (GC)
+  | Skip
+
