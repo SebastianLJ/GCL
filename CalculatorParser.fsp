@@ -10,7 +10,7 @@ open CalculatorTypesAST
 %token GC C
 %token ASSIGN SEPARATOR IF FI DO OD 
 %token FUNC CONC 
-%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK ARRAY
+%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK ARRAY VAR
 %token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE
 %token EOF WHITESPACE
 // NOTE: the actual formats of these tokens are defined in the lexer file
@@ -71,6 +71,7 @@ aExpr:
   | aExpr POW aExpr     { PowExpr($1,$3) }
   | MINUS aExpr         { UMinusExpr($2) }
   | NUM                 { Num($1) }
+  | VAR                 { Var($1) }
   | LPAR aExpr RPAR     { $2 }
 
 bExpr:

@@ -24,6 +24,7 @@ type token =
   | LBRACK
   | RBRACK
   | ARRAY
+  | VAR
   | FUNC
   | CONC
   | ASSIGN
@@ -61,6 +62,7 @@ type tokenId =
     | TOKEN_LBRACK
     | TOKEN_RBRACK
     | TOKEN_ARRAY
+    | TOKEN_VAR
     | TOKEN_FUNC
     | TOKEN_CONC
     | TOKEN_ASSIGN

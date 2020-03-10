@@ -6,8 +6,8 @@ open System
 
  type a = 
   | N of int
-  | X of String
-  | A of a
+  | Var of string
+  | A of char
   | PlusExpr of (a * a)
   | MinusExpr of (a * a)
   | TimesExpr of (a * a)
@@ -33,7 +33,7 @@ open System
   | ConcExpr of (GC * GC)
  and C =
   | AssignExpr of (a)
-  | AssignArrExpr of (String * a * a)
+  | AssignArrExpr of (string * a * a)
   | SeparatorExpr of (C * C)
   | IfExpr of (GC)
   | DoExpr of (GC)
