@@ -14,7 +14,8 @@ open CalculatorLexer
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)    
     
-let rec evala a = match a with
+let rec evala a =
+    match a with
     | N(x) -> x
     | X(x) -> 0 //return value of x?
     | PlusExpr(x,y) -> evala(x) + evala(y)
@@ -25,7 +26,8 @@ let rec evala a = match a with
     | UMinusExpr(x) -> - evala(x)
 
 
-let rec evalb b = match b with
+let rec evalb b =
+    match b with
     | Tf(x) -> x //return true/false
     | AndHardExpr(x,y) -> evalb(x) && evalb(x)
     | OrHardExpr(x,y) -> evalb(x) || evalb(x)
@@ -37,7 +39,8 @@ let rec evalb b = match b with
     | LtExpr(x,y) -> evala(x) < evala(y)
     | LteExpr(x,y) -> evala(x) <= evala(y)
     
-let rec evalc c = match c with
+let rec evalc c =
+    match c with
     | AssignExpr(x) -> evala(x)
     | AssignArrExpr(x,y,z) -> evala(y)
                               evala(z)
@@ -45,7 +48,8 @@ let rec evalc c = match c with
                             evalc y
     | IfExpr(x) -> evalgc(x)
     | DoExpr(x) -> evalgc(x)
-and evalgc gc = match gc with
+and evalgc gc =
+    match gc with
     | FuncExpr(b, c) -> evalb(b)
                         evalc(c)
     | ConcExpr(gc1, gc2) -> evalgc(gc1)

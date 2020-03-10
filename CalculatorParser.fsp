@@ -7,11 +7,12 @@ open CalculatorTypesAST
 %token <int> NUM
 %token <String> x
 %token <bool> boolean
+%token GC C
 %token ASSIGN SEPARATOR IF FI DO OD 
 %token FUNC CONC 
-%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK
+%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK ARRAY
 %token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE
-%token EOF
+%token EOF WHITESPACE
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
 

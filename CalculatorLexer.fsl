@@ -11,7 +11,7 @@ open CalculatorParser
 let digit       = ['0'-'9']
 let num         = digit+
 let x           = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z'] | "\d_")*
-let boolean     = true | false
+let boolean     = "true" | "false"
 let whitespace  = [' ' '\n' '\r' '\t']
 
 // We define now the rules for recognising and building tokens
