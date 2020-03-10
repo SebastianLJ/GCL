@@ -1,7 +1,7 @@
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "FsLexYacc.Runtime.10.0.0/lib/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -17,20 +17,32 @@ open CalculatorLexer
 let rec evala a =
     match a with
     | Num(x) -> x
-    | Var(x) -> 0 //return value of x?
+    | Var(x) -> 0.0 //return value of x?
     | PlusExpr(x,y) -> evala(x) + evala(y)
     | MinusExpr(x,y) -> evala(x) - evala(y)
     | TimesExpr(x,y) -> evala(x) * evala(y)
     | DivExpr(x,y) -> evala(x) / evala(y)
-    | PowExpr(x,y) -> int (float (evala(x)) ** float (evala(y)))
+    | PowExpr(x,y) -> evala(x) ** evala(y)
     | UMinusExpr(x) -> - evala(x)
 
+let rec evalASyntax a =
+    match a with
+    | Num(_) -> true
+    | Var(_) -> true
+    | PlusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | MinusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | TimesExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | DivExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | PowExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | UMinusExpr(x) -> evalASyntax(x)
+    | _ -> false
 
 let rec evalb b =
     match b with
-    | Tf(x) -> x //return true/false
-    | AndHardExpr(x,y) -> evalb(x) && evalb(x)
-    | OrHardExpr(x,y) -> evalb(x) || evalb(x)
+    | True -> true
+    | False -> false
+    | AndHardExpr(x,y) -> evalb(x) && evalb(y)
+    | OrHardExpr(x,y) -> evalb(x) || evalb(y)
     | NotExpr(x) -> not (evalb(x))
     | EqualExpr(x,y) -> evala(x) = evala(y)
     | NEqualExpr(x,y) -> evala(x) <> evala(y)
@@ -38,6 +50,21 @@ let rec evalb b =
     | GteExpr(x,y) -> evala(x) >= evala(y)
     | LtExpr(x,y) -> evala(x) < evala(y)
     | LteExpr(x,y) -> evala(x) <= evala(y)
+    
+let rec evalBSyntax b =
+    match b with
+    | True -> true
+    | False -> true
+    | AndHardExpr(x,y) -> evalBSyntax(x) && evalBSyntax(y)
+    | OrHardExpr(x,y) -> evalBSyntax(x) || evalBSyntax(y)
+    | NotExpr(x) -> not (evalBSyntax(x))
+    | EqualExpr(x,y) -> evalASyntax(x) = evalASyntax(y)
+    | NEqualExpr(x,y) -> evalASyntax(x) <> evalASyntax(y)
+    | GtExpr(x,y) -> evalASyntax(x) > evalASyntax(y)
+    | GteExpr(x,y) -> evalASyntax(x) >= evalASyntax(y)
+    | LtExpr(x,y) -> evalASyntax(x) < evalASyntax(y)
+    | LteExpr(x,y) -> evalASyntax(x) <= evalASyntax(y)
+    | _ -> false
     
 let rec evalc c =
     match c with
@@ -54,6 +81,19 @@ and evalgc gc =
                         evalc(c)
     | ConcExpr(gc1, gc2) -> evalgc(gc1)
                             evalgc(gc2)
+    
+let rec evalCSyntax c =
+   match c with
+   | AssignExpr(x) -> evalASyntax x
+   | AssignArrExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+   | SeparatorExpr(x,y) -> evalCSyntax x && evalCSyntax y
+   | IfExpr(x) -> evalGCSyntax(x)
+   | DoExpr(x) -> evalGCSyntax(x)
+    
+and evalGCSyntax gc =
+    match gc with
+    | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
+    | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
 
 let parse input =
     // translate string into a buffer of characters
@@ -69,11 +109,13 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
+        let e = parse (Console.ReadLine())
+        printfn "Tokenized string: %A" e
+        printfn "Result: %b" (evalCSyntax(e))
         try
         // We parse the input string
-        let e = parse (Console.ReadLine())
         // and print the result of evaluating it
-        //printfn "Result: %f" (eval(e))
+        
         compute n
         with err -> printfn "invalid syntax"
 

@@ -5,7 +5,7 @@ open System
 
 
  type a = 
-  | Num of int
+  | Num of double
   | Var of string
   | A of char
   | PlusExpr of (a * a)
@@ -16,7 +16,8 @@ open System
   | PowExpr of (a * a)
 
  type b =
-  | Tf of bool
+  | True
+  | False
   | AndExpr of (b * b)
   | OrExpr of (b * b)
   | AndHardExpr of (b * b)

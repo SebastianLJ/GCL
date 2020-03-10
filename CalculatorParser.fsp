@@ -4,15 +4,15 @@ open CalculatorTypesAST
 %}
 
 // Declare the tokens (terminal symbols)
-%token <int> NUM
+%token <double> NUM
+%token <string> VAR
 %token <string> X
 %token <char> ARRAY
-%token <bool> BOOLEAN
 %token GC C
 %token ASSIGN SEPARATOR IF FI DO OD 
 %token FUNC CONC 
-%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK VAR
-%token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE
+%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK 
+%token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE TRUE FALSE
 %token EOF WHITESPACE
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
@@ -24,7 +24,6 @@ open CalculatorTypesAST
 %left PLUS MINUS
 %left AND ANDH
 %left OR ORH
-
 
 // We declare the initial non-terminal symbol
 %start start
@@ -75,17 +74,19 @@ aExpr:
   | LPAR aExpr RPAR     { $2 }
 
 bExpr:
+  | TRUE                { True }
+  | FALSE               { False }
   | bExpr AND bExpr     { AndExpr($1, $3) }
   | bExpr OR bExpr      { OrExpr($1, $3) }
   | bExpr ANDH bExpr    { AndHardExpr($1, $3) }
   | bExpr ORH bExpr     { OrHardExpr($1, $3) }
   | NOT bExpr           { NotExpr($2) }
-  | bExpr EQUAL bExpr   { EqualExpr($1, $3) }
-  | bExpr NEQUAL bExpr  { NEqualExpr($1, $3) }
-  | bExpr GT bExpr      { GtExpr($1, $3) }
-  | bExpr GTE bExpr     { GteExpr($1, $3) }
-  | bExpr LT bExpr      { LtExpr($1, $3) }
-  | bExpr LTE bExpr     { LteExpr($1, $3) }
+  | aExpr EQUAL aExpr   { EqualExpr($1, $3) }
+  | aExpr NEQUAL aExpr  { NEqualExpr($1, $3) }
+  | aExpr GT aExpr      { GtExpr($1, $3) }
+  | aExpr GTE aExpr     { GteExpr($1, $3) }
+  | aExpr LT aExpr      { LtExpr($1, $3) }
+  | aExpr LTE aExpr     { LteExpr($1, $3) }
 
 // Again, the code annotation specifies the result of parsing
 // For example { TimesExpr($1,$3) } specifies that parsing with the production

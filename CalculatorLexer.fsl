@@ -24,14 +24,15 @@ rule tokenize = parse
 
 // deal with tokens that need to be built
 | whitespace    { WHITESPACE }
-| num           { NUM(Integer.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
-| boolean       { BOOL(Boolean.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
+| num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
 | "if"          { IF }
 | "fi"          { FI }
 | "do"          { DO }
 | "od"          { OD }
-| x             { VAR }
-| array         { ARRAY }
+| "true"        { TRUE }
+| "false"       { FALSE }
+| x             { VAR(LexBuffer<_>.LexemeString lexbuf) }
+| array         { ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
 | ":="          { ASSIGN }
 | ';'           { SEPARATOR }
 | "->"          { FUNC }

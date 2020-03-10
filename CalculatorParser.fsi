@@ -14,6 +14,8 @@ type token =
   | GTE
   | LT
   | LTE
+  | TRUE
+  | FALSE
   | PLUS
   | MINUS
   | TIMES
@@ -23,7 +25,6 @@ type token =
   | RPAR
   | LBRACK
   | RBRACK
-  | VAR
   | FUNC
   | CONC
   | ASSIGN
@@ -34,10 +35,10 @@ type token =
   | OD
   | GC
   | C
-  | BOOLEAN of (bool)
   | ARRAY of (char)
   | X of (string)
-  | NUM of (int)
+  | VAR of (string)
+  | NUM of (double)
 type tokenId = 
     | TOKEN_EOF
     | TOKEN_WHITESPACE
@@ -52,6 +53,8 @@ type tokenId =
     | TOKEN_GTE
     | TOKEN_LT
     | TOKEN_LTE
+    | TOKEN_TRUE
+    | TOKEN_FALSE
     | TOKEN_PLUS
     | TOKEN_MINUS
     | TOKEN_TIMES
@@ -61,7 +64,6 @@ type tokenId =
     | TOKEN_RPAR
     | TOKEN_LBRACK
     | TOKEN_RBRACK
-    | TOKEN_VAR
     | TOKEN_FUNC
     | TOKEN_CONC
     | TOKEN_ASSIGN
@@ -72,9 +74,9 @@ type tokenId =
     | TOKEN_OD
     | TOKEN_GC
     | TOKEN_C
-    | TOKEN_BOOLEAN
     | TOKEN_ARRAY
     | TOKEN_X
+    | TOKEN_VAR
     | TOKEN_NUM
     | TOKEN_end_of_input
     | TOKEN_error
