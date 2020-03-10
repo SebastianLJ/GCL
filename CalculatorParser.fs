@@ -43,8 +43,8 @@ type token =
   | OD
   | GC
   | C
-  | boolean of (bool)
-  | x of (String)
+  | BOOLEAN of (bool)
+  | X of (String)
   | NUM of (int)
 // This type is used to give symbolic names to token indexes, useful for error messages
 type tokenId = 
@@ -81,8 +81,8 @@ type tokenId =
     | TOKEN_OD
     | TOKEN_GC
     | TOKEN_C
-    | TOKEN_boolean
-    | TOKEN_x
+    | TOKEN_BOOLEAN
+    | TOKEN_X
     | TOKEN_NUM
     | TOKEN_end_of_input
     | TOKEN_error
@@ -131,8 +131,8 @@ let tagOfToken (t:token) =
   | OD  -> 30 
   | GC  -> 31 
   | C  -> 32 
-  | boolean _ -> 33 
-  | x _ -> 34 
+  | BOOLEAN _ -> 33 
+  | X _ -> 34 
   | NUM _ -> 35 
 
 // This function maps integer indexes to symbolic token ids
@@ -171,8 +171,8 @@ let tokenTagToTokenId (tokenIdx:int) =
   | 30 -> TOKEN_OD 
   | 31 -> TOKEN_GC 
   | 32 -> TOKEN_C 
-  | 33 -> TOKEN_boolean 
-  | 34 -> TOKEN_x 
+  | 33 -> TOKEN_BOOLEAN 
+  | 34 -> TOKEN_X 
   | 35 -> TOKEN_NUM 
   | 38 -> TOKEN_end_of_input
   | 36 -> TOKEN_error
@@ -250,8 +250,8 @@ let token_to_string (t:token) =
   | OD  -> "OD" 
   | GC  -> "GC" 
   | C  -> "C" 
-  | boolean _ -> "boolean" 
-  | x _ -> "x" 
+  | BOOLEAN _ -> "BOOLEAN" 
+  | X _ -> "X" 
   | NUM _ -> "NUM" 
 
 // This function gets the data carried by a token as an object
@@ -290,8 +290,8 @@ let _fsyacc_dataOfToken (t:token) =
   | OD  -> (null : System.Object) 
   | GC  -> (null : System.Object) 
   | C  -> (null : System.Object) 
-  | boolean _fsyacc_x -> Microsoft.FSharp.Core.Operators.box _fsyacc_x 
-  | x _fsyacc_x -> Microsoft.FSharp.Core.Operators.box _fsyacc_x 
+  | BOOLEAN _fsyacc_x -> Microsoft.FSharp.Core.Operators.box _fsyacc_x 
+  | X _fsyacc_x -> Microsoft.FSharp.Core.Operators.box _fsyacc_x 
   | NUM _fsyacc_x -> Microsoft.FSharp.Core.Operators.box _fsyacc_x 
 let _fsyacc_gotos = [| 0us; 65535us; 1us; 65535us; 0us; 1us; 3us; 65535us; 0us; 2us; 15us; 13us; 27us; 14us; 2us; 65535us; 17us; 18us; 22us; 23us; 10us; 65535us; 5us; 6us; 8us; 9us; 11us; 12us; 38us; 31us; 39us; 32us; 40us; 33us; 41us; 34us; 42us; 35us; 43us; 36us; 45us; 37us; 13us; 65535us; 17us; 26us; 22us; 26us; 58us; 47us; 59us; 48us; 60us; 49us; 61us; 50us; 62us; 51us; 63us; 52us; 64us; 53us; 65us; 54us; 66us; 55us; 67us; 56us; 68us; 57us; |]
 let _fsyacc_sparseGotoTableRowOffsets = [|0us; 1us; 3us; 7us; 10us; 21us; |]

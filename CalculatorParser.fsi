@@ -34,8 +34,8 @@ type token =
   | OD
   | GC
   | C
-  | boolean of (bool)
-  | x of (String)
+  | BOOLEAN of (bool)
+  | X of (String)
   | NUM of (int)
 type tokenId = 
     | TOKEN_EOF
@@ -71,8 +71,8 @@ type tokenId =
     | TOKEN_OD
     | TOKEN_GC
     | TOKEN_C
-    | TOKEN_boolean
-    | TOKEN_x
+    | TOKEN_BOOLEAN
+    | TOKEN_X
     | TOKEN_NUM
     | TOKEN_end_of_input
     | TOKEN_error
