@@ -16,7 +16,7 @@ open CalculatorLexer
     
 let rec evala a =
     match a with
-    | N(x) -> x
+    | Num(x) -> x
     | Var(x) -> 0 //return value of x?
     | PlusExpr(x,y) -> evala(x) + evala(y)
     | MinusExpr(x,y) -> evala(x) - evala(y)

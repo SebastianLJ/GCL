@@ -5,7 +5,7 @@ open System
 
 
  type a = 
-  | N of int
+  | Num of int
   | Var of string
   | A of char
   | PlusExpr of (a * a)

@@ -23,7 +23,6 @@ type token =
   | RPAR
   | LBRACK
   | RBRACK
-  | ARRAY
   | VAR
   | FUNC
   | CONC
@@ -36,7 +35,8 @@ type token =
   | GC
   | C
   | BOOLEAN of (bool)
-  | X of (String)
+  | ARRAY of (char)
+  | X of (string)
   | NUM of (int)
 type tokenId = 
     | TOKEN_EOF
@@ -61,7 +61,6 @@ type tokenId =
     | TOKEN_RPAR
     | TOKEN_LBRACK
     | TOKEN_RBRACK
-    | TOKEN_ARRAY
     | TOKEN_VAR
     | TOKEN_FUNC
     | TOKEN_CONC
@@ -74,6 +73,7 @@ type tokenId =
     | TOKEN_GC
     | TOKEN_C
     | TOKEN_BOOLEAN
+    | TOKEN_ARRAY
     | TOKEN_X
     | TOKEN_NUM
     | TOKEN_end_of_input
