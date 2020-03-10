@@ -38,10 +38,10 @@ let rec evalb b = match b with
     | LteExpr(x,y) -> evala(x) <= evala(y)
     
 let rec evalc c = match c with
-    | AssignExpr(x,y) -> evala(y)
+    | AssignExpr(x) -> evala(x)
     | AssignArrExpr(x,y,z) -> evala(y)
                               evala(z)
-    | SeperatorExpr(x,y) -> evalc x
+    | SeparatorExpr(x,y) -> evalc x
                             evalc y
     | IfExpr(x) -> evalgc(x)
     | DoExpr(x) -> evalgc(x)

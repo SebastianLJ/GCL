@@ -7,8 +7,9 @@ open CalculatorTypesAST
 %token <int> NUM
 %token <String> x
 %token <bool> boolean
-%token ASSIGN SEPERATOR IF FI DO OD FUNC CONC 
-%token PLUS MINUS TIMES DIV POW  LPAR RPAR
+%token ASSIGN SEPARATOR IF FI DO OD 
+%token FUNC CONC 
+%token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK
 %token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE
 %token EOF
 // NOTE: the actual formats of these tokens are defined in the lexer file
@@ -51,9 +52,9 @@ start: cExpr EOF             { $1 }
 // written in the yacc format:
 
 cExpr:
-  | aExpr ASSIGN aExpr                     { AssignExpr($1, $3) }
+  | x ASSIGN aExpr                         { AssignExpr($3) }
   | ARRAY LBRACK aExpr RBRACK ASSIGN aExpr { AssignArrExpr($3, $6) }
-  | cExpr SEPERATOR cExpr                  { SeperatorExpr($1, $3) }
+  | cExpr SEPARATOR cExpr                  { SeparatorExpr($1, $3) }
   | IF WHITESPACE gcExpr WHITESPACE FI     { IfExpr($3) }
   | DO WHITESPACE gcExpr WHITESPACE OD     { DoExpr($3) }
 
@@ -74,11 +75,11 @@ aExpr:
 bExpr:
   | bExpr AND bExpr     { AndExpr($1, $3) }
   | bExpr OR bExpr      { OrExpr($1, $3) }
-  | bExpr ANDH bExpr    { AndhExpr($1, $3) }
-  | bExpr ORH bExpr     { OrhExpr($1, $3) }
+  | bExpr ANDH bExpr    { AndHardExpr($1, $3) }
+  | bExpr ORH bExpr     { OrHardExpr($1, $3) }
   | NOT bExpr           { NotExpr($2) }
   | bExpr EQUAL bExpr   { EqualExpr($1, $3) }
-  | bExpr NEQUAL bExpr  { NequalExpr($1, $3) }
+  | bExpr NEQUAL bExpr  { NEqualExpr($1, $3) }
   | bExpr GT bExpr      { GtExpr($1, $3) }
   | bExpr GTE bExpr     { GteExpr($1, $3) }
   | bExpr LT bExpr      { LtExpr($1, $3) }

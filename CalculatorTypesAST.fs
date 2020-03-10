@@ -32,9 +32,9 @@ open System
   | FuncExpr of (b * C)
   | ConcExpr of (GC * GC)
  and C =
-  | AssignExpr of (String * a)
+  | AssignExpr of (a)
   | AssignArrExpr of (String * a * a)
-  | SeperatorExpr of (C * C)
+  | SeparatorExpr of (C * C)
   | IfExpr of (GC)
   | DoExpr of (GC)
   | Skip

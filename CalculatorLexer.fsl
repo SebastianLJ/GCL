@@ -10,7 +10,7 @@ open CalculatorParser
 // We define macros for some regular expressions we will use later
 let digit       = ['0'-'9']
 let num         = digit+
-let x           = [a-zA-Z][a-zA-Z\d_]*
+let x           = ['a' - 'z' 'A' - 'Z']['a' - 'z' 'A' -'Z' '\d_']*
 let boolean     = true | false
 let whitespace  = [' ' '\n' '\r' '\t']
 
@@ -27,17 +27,14 @@ rule tokenize = parse
 | boolean       { BOOL(Boolean.Parse(LexBuffer<_>.LexemeStringlexbuf)) }
 | whitespace    {WHITESPACE}
 | 'A'           { ARRAY }
-
 | ":="          { ASSIGN }
-| ';'           { SEPERATOR }
+| ';'           { SEPARATOR }
 | "if"          { IF }
 | "fi"          { FI }
 | "do"          { DO }
 | "od"          { OD }
-
 | "->"          { FUNC }
 | "[]"          { CONC }
-
 | '+'           { PLUS }
 | '-'           { MINUS }
 | '*'           { TIMES }
@@ -47,7 +44,6 @@ rule tokenize = parse
 | ')'           { RPAR }
 | '['           { LBRACK }
 | ']'           { RBRACK }
-
 | '&'           { AND }
 | '|'           { OR }
 | "&&"          { ANDH }
@@ -59,6 +55,4 @@ rule tokenize = parse
 | ">="          { GTE }
 | '<'           { LT }
 | "<="          { LTE }
-
-
 | eof           { EOF }
