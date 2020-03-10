@@ -13,37 +13,48 @@ open CalculatorLexer
 
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)
-let variables = Map.empty.Add('x', x);;
-let arrays = Map.empty.Add('a', [|0|]);;
-let rec eval e = //Maybe split eval up into two function, we need tob e able to return numbers (in arithmetic expressions), boolean epressions (2>3), but also a memory in case of memory-assignemnts such as x:=2 or A[2]=1.
-  //only way that it is possible to reutrn these different types is to create seperate functions.
-  match e with
-    | AssignExpr(x,y) -> variables.Add(x,y) //todo
-    | AssignArrExpr(x,y,z) -> //todo
-    | SeperatorExpr(x,y) -> //todo
-    | IfExpr(x) -> 
-    | DoExpr(x) -> 
-    | FuncExpr(b, C)-> //todo
-    | ConcExpr(GC1, GC2) ->   //todo
-    | N(x) -> x
-    | X(x) -> x //return value of x?
-    | PlusExpr(x,y) -> eval(x) + eval (y)
-    | MinusExpr(x,y) -> eval(x) - eval (y)
-    | TimesExpr(x,y) -> eval(x) * eval (y)
-    | DivExpr(x,y) -> eval(x) / eval (y)
-    | PowExpr(x,y) -> eval(x) ** eval (y)
-    | UMinusExpr(x) -> - eval(x)
 
+let rec eval e = //Maybe split eval up into two function, we need tob e able to return numbers (in arithmetic expressions), boolean epressions (2>3), but also a memory in case of memory-assignemnts such as x:=2 or A[2]=1.
+  //only way that it is possible to return these different types is to create seperate functions.
+
+    
+    
+    
+let rec evala a = match a with
+    | N(x) -> x
+    | X(x) -> 0 //return value of x?
+    | PlusExpr(x,y) -> evala(x) + evala(y)
+    | MinusExpr(x,y) -> evala(x) - evala(y)
+    | TimesExpr(x,y) -> evala(x) * evala(y)
+    | DivExpr(x,y) -> evala(x) / evala(y)
+    | PowExpr(x,y) -> int (float (evala(x)) ** float (evala(y)))
+    | UMinusExpr(x) -> - evala(x)
+
+
+let rec evalb b = match b with
     | Tf(x) -> x //return true/false
-    | AndhExpr(x,y) -> eval(x) && eval(x)
-    | OrhExpr(x,y) -> eval(x) || eval(x)
-    | NotExpr(x) -> not eval(x)
-    | EqualExpr(x,y) -> eval(x) = eval(y)
-    | NequalExpr(x,y) -> eval(x) <> eval(y)
-    | GtExpr(x,y) -> eval(x) > eval(y)
-    | GteExpr(x,y) -> eval(x) >= eval(y)
-    | LtExpr(x,y) -> eval(x) < eval(y)
-    | LteExpr(x,y) -> eval(x) <= eval(y)
+    | AndHardExpr(x,y) -> evalb(x) && evalb(x)
+    | OrHardExpr(x,y) -> evalb(x) || evalb(x)
+    | NotExpr(x) -> not (evalb(x))
+    | EqualExpr(x,y) -> evala(x) = evala(y)
+    | NEqualExpr(x,y) -> evala(x) <> evala(y)
+    | GtExpr(x,y) -> evala(x) > evala(y)
+    | GteExpr(x,y) -> evala(x) >= evala(y)
+    | LtExpr(x,y) -> evala(x) < evala(y)
+    | LteExpr(x,y) -> evala(x) <= evala(y)
+    
+let rec evalc c = match c with
+    | AssignExpr(x,y) -> 0
+    | AssignArrExpr(x,y,z) -> 0
+    | SeperatorExpr(x,y) -> 0
+    | IfExpr(x) -> 0
+    | DoExpr(x) -> 0 
+
+let rec evalgc gc = match gc with
+    | FuncExpr(b, c) -> evalb(b)
+                        evalc(c)
+    | ConcExpr(gc1, gc2) -> evalgc(gc1)
+                            evalgc(gc2)
 
 let parse input =
     // translate string into a buffer of characters
