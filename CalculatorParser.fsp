@@ -52,7 +52,7 @@ start: cExpr EOF             { $1 }
 // written in the yacc format:
 
 cExpr:
-  | X ASSIGN aExpr                         { AssignExpr($3) }
+  | VAR ASSIGN aExpr                       { AssignExpr($3) }
   | ARRAY LBRACK aExpr RBRACK ASSIGN aExpr { AssignArrExpr($3, $6) }
   | cExpr SEPARATOR cExpr                  { SeparatorExpr($1, $3) }
   | IF WHITESPACE gcExpr WHITESPACE FI     { IfExpr($3) }
@@ -71,7 +71,7 @@ aExpr:
   | MINUS aExpr         { UMinusExpr($2) }
   | NUM                 { Num($1) }
   | VAR                 { Var($1) }
-  | LPAR aExpr RPAR     { $2 }
+  | LPAR aExpr RPAR     { aExpr($2) }
 
 bExpr:
   | TRUE                { True }
