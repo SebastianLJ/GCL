@@ -1,7 +1,7 @@
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -14,6 +14,7 @@ open CalculatorLexer
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)    
     
+(*
 let rec evala a =
     match a with
     | Num(x) -> x
@@ -25,6 +26,7 @@ let rec evala a =
     | PowExpr(x,y) -> evala(x) ** evala(y)
     | UMinusExpr(x) -> - evala(x)
 
+*)
 let rec evalASyntax a =
     match a with
     | Num(_) -> true
@@ -37,7 +39,7 @@ let rec evalASyntax a =
     | UMinusExpr(x) -> evalASyntax(x)
     | _ -> false
 
-let rec evalb b =
+(*let rec evalb b =
     match b with
     | True -> true
     | False -> false
@@ -49,7 +51,7 @@ let rec evalb b =
     | GtExpr(x,y) -> evala(x) > evala(y)
     | GteExpr(x,y) -> evala(x) >= evala(y)
     | LtExpr(x,y) -> evala(x) < evala(y)
-    | LteExpr(x,y) -> evala(x) <= evala(y)
+    | LteExpr(x,y) -> evala(x) <= evala(y)*)
     
 let rec evalBSyntax b =
     match b with
@@ -66,7 +68,7 @@ let rec evalBSyntax b =
     | LteExpr(x,y) -> evalASyntax(x) <= evalASyntax(y)
     | _ -> false
     
-let rec evalc c =
+(*let rec evalc c =
     match c with
     | AssignExpr(x) -> evala(x)
     | AssignArrExpr(x,y) -> evala(x)
@@ -80,7 +82,7 @@ and evalgc gc =
     | FuncExpr(b, c) -> evalb(b)
                         evalc(c)
     | ConcExpr(gc1, gc2) -> evalgc(gc1)
-                            evalgc(gc2)
+                            evalgc(gc2)*)
     
 let rec evalCSyntax c =
    match c with
@@ -89,7 +91,8 @@ let rec evalCSyntax c =
    | SeparatorExpr(x,y) -> evalCSyntax x && evalCSyntax y
    | IfExpr(x) -> evalGCSyntax(x)
    | DoExpr(x) -> evalGCSyntax(x)
-    
+   | Skip -> true
+   
 and evalGCSyntax gc =
     match gc with
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
@@ -109,13 +112,12 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        let e = parse (Console.ReadLine())
-        printfn "Tokenized string: %A" e
-        printfn "Result: %b" (evalCSyntax(e))
         try
         // We parse the input string
+        let e = parse (Console.ReadLine())
         // and print the result of evaluating it
-        
+        Console.WriteLine("Parsed tokens: {0} ", e )
+        (*Console.WriteLine("Result: {0}", evalCSyntax(e)), this returns true/false, if you want to uncomment this then comment the line right above to avoid errors*)
         compute n
         with err -> printfn "invalid syntax"
 
