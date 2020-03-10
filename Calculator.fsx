@@ -12,13 +12,7 @@ open CalculatorParser
 open CalculatorLexer
 
 // We define the evaluation function recursively, by induction on the structure
-// of arithmetic expressions (AST of type  expr)
-
-let rec eval e = //Maybe split eval up into two function, we need tob e able to return numbers (in arithmetic expressions), boolean epressions (2>3), but also a memory in case of memory-assignemnts such as x:=2 or A[2]=1.
-  //only way that it is possible to return these different types is to create seperate functions.
-
-    
-    
+// of arithmetic expressions (AST of type  expr)    
     
 let rec evala a = match a with
     | N(x) -> x
@@ -44,13 +38,14 @@ let rec evalb b = match b with
     | LteExpr(x,y) -> evala(x) <= evala(y)
     
 let rec evalc c = match c with
-    | AssignExpr(x,y) -> 0
-    | AssignArrExpr(x,y,z) -> 0
-    | SeperatorExpr(x,y) -> 0
-    | IfExpr(x) -> 0
-    | DoExpr(x) -> 0 
-
-let rec evalgc gc = match gc with
+    | AssignExpr(x,y) -> evala(y)
+    | AssignArrExpr(x,y,z) -> evala(y)
+                              evala(z)
+    | SeperatorExpr(x,y) -> evalc x
+                            evalc y
+    | IfExpr(x) -> evalgc(x)
+    | DoExpr(x) -> evalgc(x)
+and evalgc gc = match gc with
     | FuncExpr(b, c) -> evalb(b)
                         evalc(c)
     | ConcExpr(gc1, gc2) -> evalgc(gc1)
@@ -66,7 +61,7 @@ let parse input =
 
 // We implement here the function that interacts with the user
 let rec compute n =
-    if n = "exit" then
+    if n = 0 then
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
@@ -74,7 +69,7 @@ let rec compute n =
         // We parse the input string
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
-        printfn "Result: %f" (eval(e))
+        //printfn "Result: %f" (eval(e))
         compute n
         with err -> printfn "invalid syntax"
 
