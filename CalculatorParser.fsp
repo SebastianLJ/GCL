@@ -71,7 +71,7 @@ aExpr:
   | MINUS aExpr         { UMinusExpr($2) }
   | NUM                 { Num($1) }
   | VAR                 { Var($1) }
-  | LPAR aExpr RPAR     { aExpr($2) }
+  | LPAR aExpr RPAR     { $2 }
 
 bExpr:
   | TRUE                { True }
