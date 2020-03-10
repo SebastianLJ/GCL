@@ -42,8 +42,8 @@ let rec evalb b =
 let rec evalc c =
     match c with
     | AssignExpr(x) -> evala(x)
-    | AssignArrExpr(x,y,z) -> evala(y)
-                              evala(z)
+    | AssignArrExpr(x,y) -> evala(x)
+                            evala(y)
     | SeparatorExpr(x,y) -> evalc x
                             evalc y
     | IfExpr(x) -> evalgc(x)

@@ -13,7 +13,7 @@ let num         = digit+
 let x           = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z'] | "\d_")*
 let boolean     = "true" | "false"
 let whitespace  = [' ' '\n' '\r' '\t']
-let array       = ['a'-'z' 'A'-'Z']
+let array       = [A'-'Z']
 
 // We define now the rules for recognising and building tokens
 // for each of the tokens of our language we need a rule
