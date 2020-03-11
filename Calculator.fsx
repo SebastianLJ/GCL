@@ -58,14 +58,14 @@ let rec evalBSyntax b =
     | True -> true
     | False -> true
     | AndHardExpr(x,y) -> evalBSyntax(x) && evalBSyntax(y)
-    | OrHardExpr(x,y) -> evalBSyntax(x) || evalBSyntax(y)
-    | NotExpr(x) -> not (evalBSyntax(x))
-    | EqualExpr(x,y) -> evalASyntax(x) = evalASyntax(y)
-    | NEqualExpr(x,y) -> evalASyntax(x) <> evalASyntax(y)
-    | GtExpr(x,y) -> evalASyntax(x) > evalASyntax(y)
-    | GteExpr(x,y) -> evalASyntax(x) >= evalASyntax(y)
-    | LtExpr(x,y) -> evalASyntax(x) < evalASyntax(y)
-    | LteExpr(x,y) -> evalASyntax(x) <= evalASyntax(y)
+    | OrHardExpr(x,y) -> evalBSyntax(x) && evalBSyntax(y)
+    | NotExpr(x) -> evalBSyntax(x)
+    | EqualExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | NEqualExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | GtExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | GteExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | LtExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+    | LteExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | _ -> false
     
 (*let rec evalc c =
@@ -91,8 +91,7 @@ let rec evalCSyntax c =
    | SeparatorExpr(x,y) -> evalCSyntax x && evalCSyntax y
    | IfExpr(x) -> evalGCSyntax(x)
    | DoExpr(x) -> evalGCSyntax(x)
-   | Skip -> true
-   
+   | Skip -> true   
 and evalGCSyntax gc =
     match gc with
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
@@ -112,14 +111,15 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        try
-        // We parse the input string
         let e = parse (Console.ReadLine())
+        // We parse the input string
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens: {0} ", e )
-        (*Console.WriteLine("Result: {0}", evalCSyntax(e)), this returns true/false, if you want to uncomment this then comment the line right above to avoid errors*)
+(*
+        Console.WriteLine("Result: {0}", evalCSyntax(e))
+*)
         compute n
-        with err -> printfn "invalid syntax"
+  
 
 // Start interacting with the user
 compute 3

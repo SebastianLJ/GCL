@@ -3,6 +3,7 @@ module CalculatorParser
 type token = 
   | EOF
   | WHITESPACE
+  | SKIP
   | AND
   | OR
   | ANDH
@@ -42,6 +43,7 @@ type token =
 type tokenId = 
     | TOKEN_EOF
     | TOKEN_WHITESPACE
+    | TOKEN_SKIP
     | TOKEN_AND
     | TOKEN_OR
     | TOKEN_ANDH
