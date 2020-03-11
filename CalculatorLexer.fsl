@@ -11,7 +11,6 @@ open CalculatorParser
 let digit       = ['0'-'9']
 let num         = digit+
 let x           = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z'] | "\d_")*
-let boolean     = "true" | "false"
 let whitespace  = [' ' '\n' '\r' '\t']
 let array       = ['A'-'Z']
 
@@ -23,12 +22,12 @@ rule tokenize = parse
 // deal with tokens that need to be ignored (skip them)
 
 // deal with tokens that need to be built
-| whitespace    { WHITESPACE }
+| whitespace    { tokenize lexbuf }
 | num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
-| "if"          { IF }
-| "fi"          { FI }
-| "do"          { DO }
-| "od"          { OD }
+| "if "         { IF }
+| " fi"         { FI }
+| "do "         { DO }
+| " od"         { OD }
 | "true"        { TRUE }
 | "false"       { FALSE }
 | x             { VAR(LexBuffer<_>.LexemeString lexbuf) }
