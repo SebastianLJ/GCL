@@ -13,17 +13,21 @@ open CalculatorTypesAST
 %token FUNC CONC 
 %token PLUS MINUS TIMES DIV POW  LPAR RPAR LBRACK RBRACK 
 %token AND OR ANDH ORH NOT EQUAL NEQUAL GT GTE LT LTE TRUE FALSE
-%token EOF WHITESPACE
+%token EOF WHITESPACE SKIP
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
 
 // Specify precedence and associativity of operators
 // Precedence is given by the order (from low to high)
-%right POW
-%left TIMES DIV
-%left PLUS MINUS
-%left AND ANDH
 %left OR ORH
+%left AND ANDH
+%left NOT
+
+
+%left PLUS MINUS
+%left TIMES DIV
+%right POW CONC SEPARATOR
+
 
 // We declare the initial non-terminal symbol
 %start start
@@ -57,6 +61,7 @@ cExpr:
   | cExpr SEPARATOR cExpr                  { SeparatorExpr($1, $3) }
   | IF gcExpr FI                           { IfExpr($2) }
   | DO gcExpr OD                           { DoExpr($2) }
+  | SKIP                                   { Skip }
 
 gcExpr:
   | bExpr FUNC cExpr    { FuncExpr($1, $3) }
