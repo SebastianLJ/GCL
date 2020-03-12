@@ -194,7 +194,6 @@ and tokenize  lexbuf =
                                  ASSIGN 
 # 195 "CalculatorLexer.fs"
           )
-          failwith("Hey baby")
   | 12 -> ( 
 # 37 "CalculatorLexer.fsl"
                                  SEPARATOR 

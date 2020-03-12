@@ -111,14 +111,13 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
+        try
+         // We parse the input string
         let e = parse (Console.ReadLine())
-        // We parse the input string
         // and print the result of evaluating it
-        Console.WriteLine("Parsed tokens: {0} ", e )
-(*
-        Console.WriteLine("Result: {0}", evalCSyntax(e))
-*)
+        Console.WriteLine("Parsed tokens (AST): {0} ", e )
         compute n
+        with err -> compute(n-1)
   
 
 // Start interacting with the user
