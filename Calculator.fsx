@@ -1,7 +1,7 @@
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils//.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -96,6 +96,20 @@ and evalGCSyntax gc =
     match gc with
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
     | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
+    
+let rec edgesC qS qE n ast =
+    match ast with
+    | AssignExpr(x)         -> [qS + string n, AssignExpr(x), qE + string n]
+    | Skip                  -> [qS + string n, Skip, qE + string n]
+    | SeparatorExpr(C1,C2)  -> edgesC qS "q" (n+1) C1 @ edgesC "q" qE (n+1) C2
+    | IfExpr(Gc)            -> edgesGC qS qE n Gc
+    | DoExpr(Gc)            -> edgesGC qS qE n Gc
+    | _                     -> failwith "Something went wrong!"
+and edgesGC qS qE n ast =
+    match ast with
+    | FuncExpr(b, c)        -> [qS, Skip, qE + string (n+1)] @ edgesC "q" qE (n+1) c
+    | ConcExpr(gc1, gc2)    -> edgesGC qS qE n gc1 @ edgesGC qS qE n gc2
+    
 
 let parse input =
     // translate string into a buffer of characters
@@ -116,6 +130,7 @@ let rec compute n =
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
+        Console.WriteLine("Program Graph: {0}", (edgesC "qStart" "qEnd" 0 e))
         compute n
         with err -> compute(n-1)
   
