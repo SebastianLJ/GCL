@@ -97,19 +97,18 @@ and evalGCSyntax gc =
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
     | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
     
-let rec edgesC qS qE n ast =
+let rec edgesC nS nE ast =
     match ast with
-    | AssignExpr(x)         -> [qS + string n, AssignExpr(x), qE + string n]
-    | Skip                  -> [qS + string n, Skip, qE + string n]
-    | SeparatorExpr(C1,C2)  -> edgesC qS "q" (n+1) C1 @ edgesC "q" qE (n+1) C2
-    | IfExpr(Gc)            -> edgesGC qS qE n Gc
-    | DoExpr(Gc)            -> edgesGC qS qE n Gc
-    | _                     -> failwith "Something went wrong!"
-and edgesGC qS qE n ast =
+    | AssignExpr(x)         -> ["q" + string nS, AssignExpr(x), "q" + string nE]
+    | AssignArrExpr (x)     -> ["q" + string nS, AssignArrExpr(x), "q" + string nE]
+    | Skip                  -> ["q" + string nS, Skip, "q" + string nE]
+    | SeparatorExpr(C1,C2)  -> edgesC nS nE C1 @ edgesC nE (nE+1) C2
+    | IfExpr(Gc)            -> edgesGC nS nE Gc
+    | DoExpr(Gc)            -> edgesGC nS nS Gc @ ["q" + string nS, Skip, "q" + string nE]
+and edgesGC nS nE ast =
     match ast with
-    | FuncExpr(b, c)        -> [qS, Skip, qE + string (n+1)] @ edgesC "q" qE (n+1) c
-    | ConcExpr(gc1, gc2)    -> edgesGC qS qE n gc1 @ edgesGC qS qE n gc2
-    
+    | FuncExpr(b, c)        -> ["q" + string nS, Skip, "q" + string nE] @ edgesC nE (nE+1) c
+    | ConcExpr(gc1, gc2)    -> edgesGC nS nE gc1 @ edgesGC nS nE gc2
 
 let parse input =
     // translate string into a buffer of characters
@@ -130,7 +129,7 @@ let rec compute n =
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        Console.WriteLine("Program Graph: {0}", (edgesC "qStart" "qEnd" 0 e))
+        Console.WriteLine("Program Graph: {0}", (edgesC 0 1 e))
         compute n
         (*with err -> compute(n-1)*)
   
