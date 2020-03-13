@@ -97,22 +97,22 @@ and evalGCSyntax gc =
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
     | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
     
-let let rec doneGC gc =
+let rec doneGC gc =
     match gc with
     | FuncExpr(b,_) ->  NotExpr(b)
     | ConcExpr(gc1, gc2)-> AndExpr(doneGC gc1, doneGC gc2)
-let rec edgesC2 qs qe ast n =
+let rec edgesC qs qe ast n =
     match ast with
     | AssignExpr(x)         -> [qs, AssignExpr(x), qe]
     | AssignArrExpr (x)     -> [qs, AssignArrExpr(x), qe]
     | Skip                  -> [qs, Skip, qe]
-    | SeparatorExpr(c1,c2)  -> edgesC2 qs ("q" + string n) c1 (n+1) @ edgesC2 ("q" + string n) qe c2 (n+1)
-    | IfExpr(gc)            -> edgesGC2 qs qe gc n
-    | DoExpr(gc)            -> edgesGC2 qs qs gc n @ [qs, Skip, qe] 
-and edgesGC2 qs qe ast n =
+    | SeparatorExpr(c1,c2)  -> edgesC qs ("q" + string n) c1 (n+1) @ edgesC ("q" + string n) qe c2 (n+1)
+    | IfExpr(gc)            -> edgesGC qs qe gc n
+    | DoExpr(gc)            -> edgesGC qs qs gc n @ [qs, Skip, qe] 
+and edgesGC qs qe ast n =
     match ast with
-    | FuncExpr(b, c)        -> [qs, Skip, "q" + string n] @ edgesC2 ("q" + string n) qe c (n+1)
-    | ConcExpr(gc1, gc2)    -> edgesGC2 qs qe gc1 n @ edgesGC2 qs qe gc2 n
+    | FuncExpr(b, c)        -> [qs, Skip, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
+    | ConcExpr(gc1, gc2)    -> edgesGC qs qe gc1 n @ edgesGC qs qe gc2 n
 
 let parse input =
     // translate string into a buffer of characters
@@ -128,12 +128,12 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        (*try*)
+        try
          // We parse the input string
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        printfn "Program Graph: %A" (edgesC2 "qStart" "qEnd" e 0)
+        printfn "Program Graph: %A" (edgesC "qStart" "qEnd" e 0)
         compute n
         with err -> printfn "Invalid Syntax!"
                     compute(n-1)
