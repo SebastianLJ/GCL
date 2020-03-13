@@ -1,3 +1,5 @@
+open System
+
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
@@ -86,8 +88,8 @@ and evalgc gc =
     
 let rec evalCSyntax c =
    match c with
-   | AssignExpr(x, y) -> evalASyntax y
-   | AssignArrExpr(x,y,z) -> evalASyntax(y) && evalASyntax(z)
+   | AssignExpr(_, y) -> evalASyntax y
+   | AssignArrExpr(_,y,z) -> evalASyntax(y) && evalASyntax(z)
    | SeparatorExpr(x,y) -> evalCSyntax x && evalCSyntax y
    | IfExpr(x) -> evalGCSyntax(x)
    | DoExpr(x) -> evalGCSyntax(x)
@@ -97,18 +99,20 @@ and evalGCSyntax gc =
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
     | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
     
-let rec edgesC nS nE ast =
+let Done gc = NotExpr(gc)
+     
+let rec edgesC2 qs qe ast n =
     match ast with
-    | AssignExpr(x)         -> ["q" + string nS, AssignExpr(x), "q" + string nE]
-    | AssignArrExpr (x)     -> ["q" + string nS, AssignArrExpr(x), "q" + string nE]
-    | Skip                  -> ["q" + string nS, Skip, "q" + string nE]
-    | SeparatorExpr(C1,C2)  -> edgesC nS nE C1 @ edgesC nE (nE+1) C2
-    | IfExpr(Gc)            -> edgesGC nS nE Gc
-    | DoExpr(Gc)            -> edgesGC nS nS Gc @ ["q" + string nS, Skip, "q" + string nE]
-and edgesGC nS nE ast =
+    | AssignExpr(x)         -> [qs, AssignExpr(x), qe]
+    | AssignArrExpr (x)     -> [qs, AssignArrExpr(x), qe]
+    | Skip                  -> [qs, Skip, qe]
+    | SeparatorExpr(c1,c2)  -> edgesC2 qs ("q" + string n) c1 (n+1) @ edgesC2 ("q" + string n) qe c2 (n+1)
+    | IfExpr(gc)            -> edgesGC2 qs qe gc n
+    | DoExpr(gc)            -> edgesGC2 qs qs gc n @ [qs, Skip, qe] 
+and edgesGC2 qs qe ast n =
     match ast with
-    | FuncExpr(b, c)        -> ["q" + string nS, Skip, "q" + string nE] @ edgesC nE (nE+1) c
-    | ConcExpr(gc1, gc2)    -> edgesGC nS nE gc1 @ edgesGC nS nE gc2
+    | FuncExpr(b, c)        -> [qs, Skip, "q" + string n] @ edgesC2 ("q" + string n) qe c (n+1)
+    | ConcExpr(gc1, gc2)    -> edgesGC2 qs qe gc1 n @ edgesGC2 qs qe gc2 n
 
 let parse input =
     // translate string into a buffer of characters
@@ -124,14 +128,15 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        (*try*)
+        try
          // We parse the input string
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        Console.WriteLine("Program Graph: {0}", (edgesC 0 1 e))
+        printfn "Program Graph: %A" (edgesC2 "qStart" "qEnd" e 0)
         compute n
-        (*with err -> compute(n-1)*)
+        with err -> printfn "Invalid Syntax!"
+                    compute(n-1)
   
 
 // Start interacting with the user
