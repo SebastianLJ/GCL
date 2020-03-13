@@ -1,7 +1,7 @@
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils//.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -96,20 +96,27 @@ and evalGCSyntax gc =
     match gc with
     | FuncExpr(b, c) -> evalBSyntax(b) && evalCSyntax(c)
     | ConcExpr(gc1, gc2) -> evalGCSyntax(gc1) && evalGCSyntax(gc2)
-    
+let updateFreshQ nS nE largest  = if (nS>largest) then (nS+1)
+                                  elif (nE>largest) then (nE+1)
+                                  else largest+1    
+let rec doneGC gc = 
+    match gc with
+    | FuncExpr(b,_) ->  NotExpr(b)
+    | ConcExpr(gc1, gc2)-> AndExpr(doneGC gc1, doneGC gc2)
 let rec edgesC nS nE ast =
     match ast with
-    | AssignExpr(x)         -> ["q" + string nS, AssignExpr(x), "q" + string nE]
-    | AssignArrExpr (x)     -> ["q" + string nS, AssignArrExpr(x), "q" + string nE]
-    | Skip                  -> ["q" + string nS, Skip, "q" + string nE]
+    | AssignExpr(x)         -> ["q" + string nS, (string) (AssignExpr(x)), "q" + string nE]
+    | AssignArrExpr (x)     -> ["q" + string nS, (string) (AssignArrExpr(x)), "q" + string nE]
+    | Skip                  -> ["q" + string nS, (string) Skip, "q" + string nE]
     | SeparatorExpr(C1,C2)  -> edgesC nS nE C1 @ edgesC nE (nE+1) C2
     | IfExpr(Gc)            -> edgesGC nS nE Gc
-    | DoExpr(Gc)            -> edgesGC nS nS Gc @ ["q" + string nS, Skip, "q" + string nE]
+    | DoExpr(Gc)            -> edgesGC nS nS Gc @ ["q" + string nS, (string) (doneGC Gc), "q" + string nE]
 and edgesGC nS nE ast =
     match ast with
-    | FuncExpr(b, c)        -> ["q" + string nS, Skip, "q" + string nE] @ edgesC nE (nE+1) c
+    | FuncExpr(b, c)        -> ["q" + string nS, (string) b, "q" + string nE] @ edgesC nE (nE+1) c
     | ConcExpr(gc1, gc2)    -> edgesGC nS nE gc1 @ edgesGC nS nE gc2
 
+    
 let parse input =
     // translate string into a buffer of characters
     let lexbuf = LexBuffer<char>.FromString input
@@ -124,14 +131,14 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        (*try*)
+        try
          // We parse the input string
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        Console.WriteLine("Program Graph: {0}", (edgesC 0 1 e))
+        printfn "Program Graph: %A" (edgesC 0 1 e)
         compute n
-        (*with err -> compute(n-1)*)
+        with err -> compute(n-1)
   
 
 // Start interacting with the user
