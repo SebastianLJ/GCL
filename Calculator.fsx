@@ -1,7 +1,9 @@
+open System
+
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils//.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -101,18 +103,54 @@ let rec doneGC gc =
     match gc with
     | FuncExpr(b,_) ->  NotExpr(b)
     | ConcExpr(gc1, gc2)-> AndExpr(doneGC gc1, doneGC gc2)
-let rec edgesC qs qe ast n =
-    match ast with
-    | AssignExpr(x)         -> [qs, AssignExpr(x), qe]
-    | AssignArrExpr (x)     -> [qs, AssignArrExpr(x), qe]
-    | Skip                  -> [qs, Skip, qe]
-    | SeparatorExpr(c1,c2)  -> edgesC qs ("q" + string n) c1 (n+1) @ edgesC ("q" + string n) qe c2 (n+1)
-    | IfExpr(gc)            -> edgesGC qs qe gc n
-    | DoExpr(gc)            -> edgesGC qs qs gc n @ [qs, Skip, qe] 
-and edgesGC qs qe ast n =
-    match ast with
-    | FuncExpr(b, c)        -> [qs, Skip, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
+
+
+
+let rec stringifyA = function
+    | Num(x) -> string x
+    | Var(x) -> x
+    | PlusExpr(x,y)  -> stringifyA x + "+" + stringifyA y
+    | MinusExpr(x,y) -> stringifyA x + "-" + stringifyA y
+    | TimesExpr(x,y) -> stringifyA x + "*" + stringifyA y
+    | DivExpr(x,y)   -> stringifyA x + "/" + stringifyA y
+    | PowExpr(x,y)   -> stringifyA x + "^" + stringifyA y
+    | UMinusExpr(x)  -> "-" + stringifyA x
+    | _              -> failwith "Something went wrong!"
+
+let stringifyC = function
+    | AssignExpr(var, value)            -> var + ":=" + stringifyA value
+    | AssignArrExpr(var, index, value)  -> string var + "[" + stringifyA index + "]" + ":=" + stringifyA value 
+    | Skip                              -> "skip"
+    | _                                 -> failwith "Something went wrong!"
+
+let rec stringifyB = function
+    | AndHardExpr(x,y) -> stringifyB x + "&&" + stringifyB y 
+    | OrHardExpr(x,y) -> stringifyB x + "||" + stringifyB y
+    | NotExpr(x) -> "!" + "(" + stringifyB x + ")"
+    | EqualExpr(x,y) -> stringifyA x + "==" + stringifyA y
+    | NEqualExpr(x,y) -> stringifyA x + "!=" + stringifyA y
+    | GtExpr(x,y) -> stringifyA x + ">" + stringifyA y
+    | GteExpr(x,y) -> stringifyA x + ">=" + stringifyA y
+    | LtExpr(x,y) -> stringifyA x + "<" + stringifyA y
+    | LteExpr(x,y) -> stringifyA x + "<=" + stringifyA y
+    | _ -> failwith "Something went wrong!"
+              
+let rec edgesC qS qE c n =
+    match c with
+    | AssignExpr x         -> [qS, stringifyC (AssignExpr x), qE]
+    | AssignArrExpr x      -> [qS, stringifyC (AssignArrExpr x), qE]
+    | Skip                 -> [qS, stringifyC Skip, qE]
+    | SeparatorExpr(c1,c2) -> edgesC qS ("q" + string n) c1 (n+1) @ edgesC ("q" + string n) qE c2 (n+1)
+    | IfExpr gc            -> edgesGC qS qE gc n
+    | DoExpr gc            -> edgesGC qS qS gc n @ [qS, stringifyB(doneGC gc), qE] 
+and edgesGC qs qe gc n =
+    match gc with
+    | FuncExpr(b, c)        -> [qs, stringifyB b, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
     | ConcExpr(gc1, gc2)    -> edgesGC qs qe gc1 n @ edgesGC qs qe gc2 n
+
+let rec graphVizify = function
+    | [] -> ""
+    | (qs, label, qe)::xs -> qs + " -> " + qe + " [label = \"" + label + "\"];\n" + graphVizify xs
 
 let parse input =
     // translate string into a buffer of characters
@@ -133,7 +171,8 @@ let rec compute n =
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        printfn "Program Graph: %A" (edgesC "qStart" "qEnd" e 0)
+        printfn "Program Graph: %A" (edgesC "qStart" "qEnd" e 1)
+        printfn "GraphViz formatted text: \n%s" (graphVizify (edgesC "qStart" "qEnd" e 1))
         compute n
         with err -> printfn "Invalid Syntax!"
                     compute(n-1)
