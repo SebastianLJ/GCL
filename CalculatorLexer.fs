@@ -128,189 +128,189 @@ let trans : uint16[] array =
     (* State 58 *)
      [| 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; |];
     |] 
-let actions : uint16[] = [|65535us; 0us; 0us; 9us; 2us; 9us; 9us; 9us; 9us; 9us; 9us; 65535us; 12us; 16us; 22us; 15us; 17us; 18us; 19us; 20us; 21us; 23us; 24us; 27us; 28us; 29us; 31us; 33us; 35us; 34us; 32us; 30us; 26us; 25us; 14us; 13us; 11us; 9us; 65535us; 65535us; 9us; 9us; 9us; 8us; 9us; 9us; 7us; 9us; 5us; 9us; 3us; 2us; 9us; 9us; 1us; 65535us; 65535us; 6us; 4us; |]
+let actions : uint16[] = [|65535us; 0us; 0us; 10us; 2us; 10us; 10us; 10us; 10us; 9us; 10us; 65535us; 12us; 16us; 22us; 15us; 17us; 18us; 19us; 20us; 21us; 23us; 24us; 27us; 28us; 29us; 31us; 33us; 35us; 34us; 32us; 30us; 26us; 25us; 14us; 13us; 11us; 10us; 65535us; 65535us; 10us; 10us; 10us; 8us; 10us; 10us; 7us; 10us; 5us; 10us; 3us; 2us; 10us; 10us; 1us; 65535us; 65535us; 6us; 4us; |]
 let _fslex_tables = FSharp.Text.Lexing.UnicodeTables.Create(trans,actions)
 let rec _fslex_dummy () = _fslex_dummy() 
 // Rule tokenize
 and tokenize  lexbuf =
   match _fslex_tables.Interpret(0,lexbuf) with
   | 0 -> ( 
-# 25 "CalculatorLexer.fsl"
+# 26 "CalculatorLexer.fsl"
                                  tokenize lexbuf 
 # 140 "CalculatorLexer.fs"
           )
   | 1 -> ( 
-# 26 "CalculatorLexer.fsl"
+# 27 "CalculatorLexer.fsl"
                                  SKIP 
 # 145 "CalculatorLexer.fs"
           )
   | 2 -> ( 
-# 27 "CalculatorLexer.fsl"
+# 28 "CalculatorLexer.fsl"
                                  NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) 
 # 150 "CalculatorLexer.fs"
           )
   | 3 -> ( 
-# 28 "CalculatorLexer.fsl"
+# 29 "CalculatorLexer.fsl"
                                  IF 
 # 155 "CalculatorLexer.fs"
           )
   | 4 -> ( 
-# 29 "CalculatorLexer.fsl"
+# 30 "CalculatorLexer.fsl"
                                  FI 
 # 160 "CalculatorLexer.fs"
           )
   | 5 -> ( 
-# 30 "CalculatorLexer.fsl"
+# 31 "CalculatorLexer.fsl"
                                  DO 
 # 165 "CalculatorLexer.fs"
           )
   | 6 -> ( 
-# 31 "CalculatorLexer.fsl"
+# 32 "CalculatorLexer.fsl"
                                  OD 
 # 170 "CalculatorLexer.fs"
           )
   | 7 -> ( 
-# 32 "CalculatorLexer.fsl"
+# 33 "CalculatorLexer.fsl"
                                  TRUE 
 # 175 "CalculatorLexer.fs"
           )
   | 8 -> ( 
-# 33 "CalculatorLexer.fsl"
+# 34 "CalculatorLexer.fsl"
                                  FALSE 
 # 180 "CalculatorLexer.fs"
           )
   | 9 -> ( 
-# 34 "CalculatorLexer.fsl"
-                                 VAR(LexBuffer<_>.LexemeString lexbuf) 
+# 35 "CalculatorLexer.fsl"
+                                ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
 # 185 "CalculatorLexer.fs"
           )
   | 10 -> ( 
-# 35 "CalculatorLexer.fsl"
-                                 ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
+# 36 "CalculatorLexer.fsl"
+                                 VAR(LexBuffer<_>.LexemeString lexbuf) 
 # 190 "CalculatorLexer.fs"
           )
   | 11 -> ( 
-# 36 "CalculatorLexer.fsl"
+# 37 "CalculatorLexer.fsl"
                                  ASSIGN 
 # 195 "CalculatorLexer.fs"
           )
   | 12 -> ( 
-# 37 "CalculatorLexer.fsl"
+# 38 "CalculatorLexer.fsl"
                                  SEPARATOR 
 # 200 "CalculatorLexer.fs"
           )
   | 13 -> ( 
-# 38 "CalculatorLexer.fsl"
+# 39 "CalculatorLexer.fsl"
                                  FUNC 
 # 205 "CalculatorLexer.fs"
           )
   | 14 -> ( 
-# 39 "CalculatorLexer.fsl"
+# 40 "CalculatorLexer.fsl"
                                  CONC 
 # 210 "CalculatorLexer.fs"
           )
   | 15 -> ( 
-# 40 "CalculatorLexer.fsl"
+# 41 "CalculatorLexer.fsl"
                                  PLUS 
 # 215 "CalculatorLexer.fs"
           )
   | 16 -> ( 
-# 41 "CalculatorLexer.fsl"
+# 42 "CalculatorLexer.fsl"
                                  MINUS 
 # 220 "CalculatorLexer.fs"
           )
   | 17 -> ( 
-# 42 "CalculatorLexer.fsl"
+# 43 "CalculatorLexer.fsl"
                                  TIMES 
 # 225 "CalculatorLexer.fs"
           )
   | 18 -> ( 
-# 43 "CalculatorLexer.fsl"
+# 44 "CalculatorLexer.fsl"
                                  DIV 
 # 230 "CalculatorLexer.fs"
           )
   | 19 -> ( 
-# 44 "CalculatorLexer.fsl"
+# 45 "CalculatorLexer.fsl"
                                  POW 
 # 235 "CalculatorLexer.fs"
           )
   | 20 -> ( 
-# 45 "CalculatorLexer.fsl"
+# 46 "CalculatorLexer.fsl"
                                  LPAR 
 # 240 "CalculatorLexer.fs"
           )
   | 21 -> ( 
-# 46 "CalculatorLexer.fsl"
+# 47 "CalculatorLexer.fsl"
                                  RPAR 
 # 245 "CalculatorLexer.fs"
           )
   | 22 -> ( 
-# 47 "CalculatorLexer.fsl"
+# 48 "CalculatorLexer.fsl"
                                  LBRACK 
 # 250 "CalculatorLexer.fs"
           )
   | 23 -> ( 
-# 48 "CalculatorLexer.fsl"
+# 49 "CalculatorLexer.fsl"
                                  RBRACK 
 # 255 "CalculatorLexer.fs"
           )
   | 24 -> ( 
-# 49 "CalculatorLexer.fsl"
+# 50 "CalculatorLexer.fsl"
                                  AND 
 # 260 "CalculatorLexer.fs"
           )
   | 25 -> ( 
-# 50 "CalculatorLexer.fsl"
+# 51 "CalculatorLexer.fsl"
                                  ANDH 
 # 265 "CalculatorLexer.fs"
           )
   | 26 -> ( 
-# 51 "CalculatorLexer.fsl"
+# 52 "CalculatorLexer.fsl"
                                  ORH 
 # 270 "CalculatorLexer.fs"
           )
   | 27 -> ( 
-# 52 "CalculatorLexer.fsl"
+# 53 "CalculatorLexer.fsl"
                                  OR 
 # 275 "CalculatorLexer.fs"
           )
   | 28 -> ( 
-# 53 "CalculatorLexer.fsl"
+# 54 "CalculatorLexer.fsl"
                                  NOT 
 # 280 "CalculatorLexer.fs"
           )
   | 29 -> ( 
-# 54 "CalculatorLexer.fsl"
+# 55 "CalculatorLexer.fsl"
                                  EQUAL 
 # 285 "CalculatorLexer.fs"
           )
   | 30 -> ( 
-# 55 "CalculatorLexer.fsl"
+# 56 "CalculatorLexer.fsl"
                                  NEQUAL 
 # 290 "CalculatorLexer.fs"
           )
   | 31 -> ( 
-# 56 "CalculatorLexer.fsl"
+# 57 "CalculatorLexer.fsl"
                                  GT 
 # 295 "CalculatorLexer.fs"
           )
   | 32 -> ( 
-# 57 "CalculatorLexer.fsl"
+# 58 "CalculatorLexer.fsl"
                                  GTE 
 # 300 "CalculatorLexer.fs"
           )
   | 33 -> ( 
-# 58 "CalculatorLexer.fsl"
+# 59 "CalculatorLexer.fsl"
                                  LT 
 # 305 "CalculatorLexer.fs"
           )
   | 34 -> ( 
-# 59 "CalculatorLexer.fsl"
+# 60 "CalculatorLexer.fsl"
                                  LTE 
 # 310 "CalculatorLexer.fs"
           )
   | 35 -> ( 
-# 60 "CalculatorLexer.fsl"
+# 61 "CalculatorLexer.fsl"
                                  EOF 
 # 315 "CalculatorLexer.fs"
           )

@@ -86,8 +86,8 @@ and evalgc gc =
     
 let rec evalCSyntax c =
    match c with
-   | AssignExpr(x) -> evalASyntax x
-   | AssignArrExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
+   | AssignExpr(x, y) -> evalASyntax y
+   | AssignArrExpr(x,y,z) -> evalASyntax(y) && evalASyntax(z)
    | SeparatorExpr(x,y) -> evalCSyntax x && evalCSyntax y
    | IfExpr(x) -> evalGCSyntax(x)
    | DoExpr(x) -> evalGCSyntax(x)
@@ -125,14 +125,14 @@ let rec compute n =
         printfn "Bye bye"
     else
         printf "Enter a program in the Guarded Commands Language: "
-        try
+        (*try*)
          // We parse the input string
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
         Console.WriteLine("Program Graph: {0}", (edgesC "qStart" "qEnd" 0 e))
         compute n
-        with err -> compute(n-1)
+        (*with err -> compute(n-1)*)
   
 
 // Start interacting with the user
