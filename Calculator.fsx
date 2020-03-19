@@ -3,7 +3,7 @@ open System
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils//.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -138,7 +138,15 @@ let rec stringifyB = function
     | GteExpr(x,y) -> stringifyA x + ">=" + stringifyA y
     | LtExpr(x,y) -> stringifyA x + "<" + stringifyA y
     | LteExpr(x,y) -> stringifyA x + "<=" + stringifyA y
-              
+let rec calculateUsedNodesGc gc =
+    match gc with
+    | FuncExpr (_,c) -> calculateUsedNodesC c + 1
+    | ConcExpr (gc1, gc2) -> calculateUsedNodesGc gc1 + calculateUsedNodesGc gc2
+and calculateUsedNodesC c =
+    match c with
+    | SeparatorExpr(c1,c2) -> calculateUsedNodesC c1 + calculateUsedNodesC c2 + 1
+    | _ -> 0
+
 let rec edgesC qS qE c n =
     match c with
     | AssignExpr x         -> [qS, stringifyC (AssignExpr x), qE]
@@ -150,17 +158,9 @@ let rec edgesC qS qE c n =
 and edgesGC qs qe gc n =
     match gc with
     | FuncExpr(b, c)        -> [qs, stringifyB b, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
-    | ConcExpr(gc1, gc2)    -> edgesGC qs qe gc1 n @ edgesGC qs qe gc2 n
+    | ConcExpr(gc1, gc2)    ->  edgesGC qs qe gc1 n @ edgesGC qs qe gc2 (n + calculateUsedNodesGc gc1)
     
-let rec calculateUsedNodesGc gc =
-    match gc with
-    | FuncExpr (_,c) -> calculateUsedNodesC c + 1
-    | ConcExpr (gc1, gc2) -> calculateUsedNodesGc gc1 + calculateUsedNodesGc gc2
-and calculateUsedNodesC c =
-    match c with
-    | SeparatorExpr(c1,c2) -> calculateUsedNodesC c1 + calculateUsedNodesC c2 + 1
-    | _ -> 0
-    
+
 let rec edgesD2 qs qe gc n d =
     match gc with
     | FuncExpr (b,c) -> ((qs, stringifyB (AndExpr (b, NotExpr d)), "q" + string n)::edgesD ("q" + string n) qe c (n+1), OrExpr(b, d))
@@ -201,9 +201,10 @@ let rec compute n =
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
-        printfn "Program Graph: %A" (edgesC "qStart" "qEnd" e 1)
-        printfn "GraphViz formatted text: \n%s" (graphVizify (edgesC "qStart" "qEnd" e 1))
-        printfn "Deterministic Program Graph %A" (edgesD "qStart" "qEnd" e 1)
+        printf "Deterministic or non-deterministic program graph (d/nd)?"
+        let pg = Console.ReadLine()
+        if(pg="nd") then printfn "GraphViz formatted text: \n%s"  (graphVizify (edgesC "qStart" "qEnd" e 1))
+        elif (pg="d") then printfn "GraphViz formatted text: \n%s" (graphVizify (edgesD "qStart" "qEnd" e 1))
         compute n
         with err -> //printfn "%s" (string err)
                     printfn "Invalid Syntax!"
