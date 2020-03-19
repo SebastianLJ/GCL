@@ -7,7 +7,7 @@ open System
  type a = 
   | Num of double
   | Var of string
-  | A of char
+  | A of char // What is this? 
   | PlusExpr of (a * a)
   | MinusExpr of (a * a)
   | TimesExpr of (a * a)

@@ -33,13 +33,13 @@ let rec evalASyntax a =
     match a with
     | Num(_) -> true
     | Var(_) -> true
+    | A(_) -> true
     | PlusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | MinusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | TimesExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | DivExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | PowExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | UMinusExpr(x) -> evalASyntax(x)
-    | _ -> false
 
 (*let rec evalb b =
     match b with
@@ -61,6 +61,8 @@ let rec evalBSyntax b =
     | False -> true
     | AndHardExpr(x,y) -> evalBSyntax(x) && evalBSyntax(y)
     | OrHardExpr(x,y) -> evalBSyntax(x) && evalBSyntax(y)
+    | AndExpr(x,y) -> evalBSyntax x && evalBSyntax y
+    | OrExpr(x,y) -> evalBSyntax x && evalBSyntax y
     | NotExpr(x) -> evalBSyntax(x)
     | EqualExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | NEqualExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
@@ -68,7 +70,6 @@ let rec evalBSyntax b =
     | GteExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | LtExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | LteExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
-    | _ -> false
     
 (*let rec evalc c =
     match c with
@@ -109,13 +110,13 @@ let rec doneGC gc =
 let rec stringifyA = function
     | Num(x) -> string x
     | Var(x) -> x
+    | A(x) -> string x
     | PlusExpr(x,y)  -> stringifyA x + "+" + stringifyA y
     | MinusExpr(x,y) -> stringifyA x + "-" + stringifyA y
     | TimesExpr(x,y) -> stringifyA x + "*" + stringifyA y
     | DivExpr(x,y)   -> stringifyA x + "/" + stringifyA y
     | PowExpr(x,y)   -> stringifyA x + "^" + stringifyA y
     | UMinusExpr(x)  -> "-" + stringifyA x
-    | _              -> failwith "Something went wrong!"
 
 let stringifyC = function
     | AssignExpr(var, value)            -> var + ":=" + stringifyA value
@@ -124,6 +125,10 @@ let stringifyC = function
     | _                                 -> failwith "Something went wrong!"
 
 let rec stringifyB = function
+    | True -> "true"
+    | False -> "false"
+    | AndExpr(x,y) -> stringifyB x + "&" + stringifyB y
+    | OrExpr(x,y) -> stringifyB x + "|" + stringifyB y
     | AndHardExpr(x,y) -> stringifyB x + "&&" + stringifyB y 
     | OrHardExpr(x,y) -> stringifyB x + "||" + stringifyB y
     | NotExpr(x) -> "!" + "(" + stringifyB x + ")"
@@ -133,7 +138,6 @@ let rec stringifyB = function
     | GteExpr(x,y) -> stringifyA x + ">=" + stringifyA y
     | LtExpr(x,y) -> stringifyA x + "<" + stringifyA y
     | LteExpr(x,y) -> stringifyA x + "<=" + stringifyA y
-    | _ -> failwith "Something went wrong!"
               
 let rec edgesC qS qE c n =
     match c with
@@ -147,6 +151,32 @@ and edgesGC qs qe gc n =
     match gc with
     | FuncExpr(b, c)        -> [qs, stringifyB b, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
     | ConcExpr(gc1, gc2)    -> edgesGC qs qe gc1 n @ edgesGC qs qe gc2 n
+    
+let rec calculateUsedNodesGc gc =
+    match gc with
+    | FuncExpr (_,c) -> calculateUsedNodesC c + 1
+    | ConcExpr (gc1, gc2) -> calculateUsedNodesGc gc1 + calculateUsedNodesGc gc2
+and calculateUsedNodesC c =
+    match c with
+    | SeparatorExpr(c1,c2) -> calculateUsedNodesC c1 + calculateUsedNodesC c2 + 1
+    | _ -> 0
+    
+let rec edgesD2 qs qe gc n d =
+    match gc with
+    | FuncExpr (b,c) -> ((qs, stringifyB (AndExpr (b, NotExpr d)), "q" + string n)::edgesD ("q" + string n) qe c (n+1), OrExpr(b, d))
+    | ConcExpr (gc1,gc2) -> let (e1, d1) = edgesD2 qs qe gc1 n d
+                            let (e2, d2) = edgesD2 qs qe gc2 (n + calculateUsedNodesGc gc1) d1
+                            (e1@e2, d2)
+and edgesD qS qE c n =
+    match c with
+    | AssignExpr x         -> [qS, stringifyC (AssignExpr x), qE]
+    | AssignArrExpr x      -> [qS, stringifyC (AssignArrExpr x), qE]
+    | Skip                 -> [qS, stringifyC Skip, qE]
+    | SeparatorExpr(c1,c2) -> edgesD qS ("q" + string n) c1 (n+1) @ edgesD ("q" + string n) qE c2 (n+1)
+    | IfExpr gc -> let (E, _) = edgesD2 qS qE gc n False
+                   E
+    | DoExpr gc -> let (E, d) = edgesD2 qS qS gc n False
+                   E@[(qS, stringifyB (NotExpr d), qE)]
 
 let rec graphVizify = function
     | [] -> ""
@@ -173,8 +203,10 @@ let rec compute n =
         Console.WriteLine("Parsed tokens (AST): {0} ", e )
         printfn "Program Graph: %A" (edgesC "qStart" "qEnd" e 1)
         printfn "GraphViz formatted text: \n%s" (graphVizify (edgesC "qStart" "qEnd" e 1))
+        printfn "Deterministic Program Graph %A" (edgesD "qStart" "qEnd" e 1)
         compute n
-        with err -> printfn "Invalid Syntax!"
+        with err -> //printfn "%s" (string err)
+                    printfn "Invalid Syntax!"
                     compute(n-1)
   
 
