@@ -3,8 +3,7 @@ open System
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
-
+#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 
@@ -27,6 +26,14 @@ let updateVar var value l =
     |> List.map (fun (k, v) ->
         if k = var then k, value
         else k, v)
+    
+let updateArr c index value memory =
+    let rec updateIndexValue index arr =
+        match (index, arr) with
+        | (0, _::arr) -> value::arr
+        | (n, a::arr) -> a::updateIndexValue (n-1) arr
+        | _           -> failwith "It should not be possible to get here!"
+    (fst memory, List.map (fun (k, arr) -> if k=c then k, updateIndexValue index arr else k, arr) (snd memory))
 
 let rec evalASyntax a =
     match a with
@@ -39,8 +46,6 @@ let rec evalASyntax a =
     | DivExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
     | PowExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
     | UMinusExpr(x) -> evalASyntax (x)
-
-
 
 let rec AEval aExp mem =
     match (aExp, mem) with
@@ -136,8 +141,23 @@ let rec BEval bExp mem =
         | (Some x, Some y) -> Some(x <= y)
         | _ -> None
 
-
-
+type mem = (string*int) list * (char*int list) list
+let isVarInDomain var memory  = true // TODO 
+let isArrInDomain c index memory = true // TODO
+let rec SEM action memory : mem option =
+    match action with
+    | Action.Skip -> Some memory
+    | VAsgn (var, value)    -> match (AEval value memory, isVarInDomain var memory) with
+                               | (Some value, true)       -> Some (updateVar var value (fst memory), snd memory) // TODO make method that takes a memory and updates it
+                               | _                        -> None
+    | AAsgn (c,i,a)         -> match (AEval i memory, AEval a memory, isArrInDomain c i memory) with
+                               | (Some z1, Some z2, true) -> Some (updateArr c z1 z2 memory)
+                               | _                        -> None
+                           
+    | Test b                -> match BEval b memory with
+                               | Some true -> Some memory
+                               | _         -> None
+    
 let rec evalBSyntax b =
     match b with
     | True -> true
@@ -158,7 +178,7 @@ let rec evalBSyntax b =
 let rec evalCSyntax c =
     match c with
     | AssignExpr(_, y) -> evalASyntax y
-    | AssignArrExpr(_, y, z) -> evalASyntax (y) && evalASyntax (z)
+    | AssignArrExpr(_, y, z) -> evalASyntax y && evalASyntax z
     | SeparatorExpr(x, y) -> evalCSyntax x && evalCSyntax y
     | IfExpr(x) -> evalGCSyntax (x)
     | DoExpr(x) -> evalGCSyntax (x)
@@ -166,16 +186,15 @@ let rec evalCSyntax c =
 
 and evalGCSyntax gc =
     match gc with
-    | FuncExpr(b, c) -> evalBSyntax (b) && evalCSyntax (c)
-    | ConcExpr(gc1, gc2) -> evalGCSyntax (gc1) && evalGCSyntax (gc2)
+    | FuncExpr(b, c) -> evalBSyntax b && evalCSyntax c
+    | ConcExpr(gc1, gc2) -> evalGCSyntax gc1 && evalGCSyntax gc2
 
 let rec doneGC gc =
     match gc with
     | FuncExpr(b, _) -> NotExpr(b)
     | ConcExpr(gc1, gc2) -> AndExpr(doneGC gc1, doneGC gc2)
 
-let rec stringifyA =
-    function
+let rec stringifyA = function
     | Num(x) -> string x
     | Var(x) -> x
     | Array(x, i) -> string x + "[" + stringifyA i + "]"
@@ -186,8 +205,7 @@ let rec stringifyA =
     | PowExpr(x, y) -> stringifyA x + "^" + stringifyA y
     | UMinusExpr(x) -> "-" + stringifyA x
 
-let rec stringifyB =
-    function
+let rec stringifyB = function
     | True -> "true"
     | False -> "false"
     | AndExpr(x, y) -> stringifyB x + "&" + stringifyB y
@@ -214,18 +232,17 @@ and calculateUsedNodesC c =
 
 let rec edgesC qS qE c n =
     match c with
-    | AssignExpr x -> [ qS, VAsgn x, qE ]
-    | AssignArrExpr x -> [ qS, AAsgn x, qE ]
-    | Skip -> [ qS, Action.Skip, qE ]
-    | SeparatorExpr(c1, c2) -> edgesC qS ("q" + string n) c1 (n + 1) @ edgesC ("q" + string n) qE c2 (n + 1)
-    | IfExpr gc -> edgesGC qS qE gc n
-    | DoExpr gc -> edgesGC qS qS gc n @ [ qS, Test(doneGC gc), qE ]
-
+    | AssignExpr x         -> [qS, VAsgn x , qE]
+    | AssignArrExpr x      -> [qS, AAsgn x, qE]
+    | Skip                 -> [qS, Action.Skip, qE]
+    | SeparatorExpr(c1,c2) -> edgesC qS ("q" + string n) c1 (n+1) @ edgesC ("q" + string n) qE c2 (n+1)
+    | IfExpr gc            -> edgesGC qS qE gc n
+    | DoExpr gc            -> edgesGC qS qS gc n @ [qS, Test (doneGC gc), qE] 
 and edgesGC qs qe gc n =
     match gc with
-    | FuncExpr(b, c) -> [ qs, Test b, "q" + string n ] @ edgesC ("q" + string n) qe c (n + 1)
-    | ConcExpr(gc1, gc2) -> edgesGC qs qe gc1 n @ edgesGC qs qe gc2 (n + calculateUsedNodesGc gc1)
-
+    | FuncExpr(b, c)        -> [qs, Test b, "q" + string n] @ edgesC ("q" + string n) qe c (n+1)
+    | ConcExpr(gc1, gc2)    ->  edgesGC qs qe gc1 n @ edgesGC qs qe gc2 (n + calculateUsedNodesGc gc1)
+    
 let rec edgesD2 qs qe gc n d =
     match gc with
     | FuncExpr(b, c) ->
@@ -237,28 +254,25 @@ let rec edgesD2 qs qe gc n d =
 
 and edgesD qS qE c n =
     match c with
-    | AssignExpr x -> [ qS, VAsgn x, qE ]
-    | AssignArrExpr x -> [ qS, AAsgn x, qE ]
-    | Skip -> [ qS, Action.Skip, qE ]
-    | SeparatorExpr(c1, c2) -> edgesD qS ("q" + string n) c1 (n + 1) @ edgesD ("q" + string n) qE c2 (n + 1)
-    | IfExpr gc ->
-        let (E, _) = edgesD2 qS qE gc n False
-        E
-    | DoExpr gc ->
-        let (E, d) = edgesD2 qS qS gc n False
-        E @ [ (qS, Test(NotExpr d), qE) ]
-
+    | AssignExpr x         -> [qS, VAsgn x, qE]
+    | AssignArrExpr x      -> [qS, AAsgn x, qE]
+    | Skip                 -> [qS, Action.Skip, qE]
+    | SeparatorExpr(c1,c2) -> edgesD qS ("q" + string n) c1 (n+1) @ edgesD ("q" + string n) qE c2 (n+1)
+    | IfExpr gc            -> let (E, _) = edgesD2 qS qE gc n False
+                              E
+    | DoExpr gc            -> let (E, d) = edgesD2 qS qS gc n False
+                              E@[(qS, Test (NotExpr d), qE)]
+                   
 let rec stringify action =
     match action with
-    | VAsgn(x, a) -> x + ":=" + stringifyA a
-    | AAsgn(x, i, a) -> string x + "[" + stringifyA i + "]" + stringifyA a
-    | Action.Skip -> "skip"
-    | Test b -> stringifyB b
+    | VAsgn (x,a)    -> x + ":=" + stringifyA a
+    | AAsgn (x,i,a)  -> string x + "[" + stringifyA i + "]" + stringifyA a
+    | Action.Skip    -> "skip"
+    | Test b         -> stringifyB b
 
-let rec graphVizify =
-    function
+let rec graphVizify = function
     | [] -> ""
-    | (qs, label, qe) :: xs -> qs + " -> " + qe + " [label = \"" + stringify label + "\"];\n" + graphVizify xs
+    | (qs, label, qe)::xs -> qs + " -> " + qe + " [label = \"" + stringify label + "\"];\n" + graphVizify xs
 
 let parse input =
     // translate string into a buffer of characters
@@ -273,10 +287,10 @@ let rec compute n =
     if n = 0 then
         printfn "Bye bye"
     else
+        printfn "Arithmetic expression: 5+5 = %A" (AEval (PlusExpr (Num 5,Num 5)) ([],[]))
         printf "Enter a program in the Guarded Commands Language: "
         try
             // We parse the input string
-            printf "Arithmetic expression: 5+5 = %A" (AEval (PlusExpr(Num 5, Num 5)) ([], []))
             let e = parse (Console.ReadLine())
             // and print the result of evaluating it
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
