@@ -3,7 +3,8 @@ open System
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+//#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "FsLexYacc.Runtime.10.0.0/lib/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -15,7 +16,8 @@ open CalculatorLexer
 
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)    
-    
+let updateVar var value l =
+    l |> List.map (fun (k, v) -> if k = var then k, value else k, v)    
 (*
 let rec evala a =
     match a with
