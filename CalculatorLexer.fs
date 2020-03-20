@@ -146,7 +146,7 @@ and tokenize  lexbuf =
           )
   | 2 -> ( 
 # 28 "CalculatorLexer.fsl"
-                                 NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) 
+                                 NUM(int (LexBuffer<_>.LexemeString lexbuf)) 
 # 150 "CalculatorLexer.fs"
           )
   | 3 -> ( 

@@ -25,7 +25,7 @@ rule tokenize = parse
 // deal with tokens that need to be built
 | whitespace    { tokenize lexbuf }
 | "skip"        { SKIP }
-| num           { NUM(Double.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| num           { NUM(int (LexBuffer<_>.LexemeString lexbuf)) }
 | "if "         { IF }
 | " fi"         { FI }
 | "do "         { DO }

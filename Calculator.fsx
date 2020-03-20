@@ -79,7 +79,9 @@ let rec AEval aExp mem =
         match (AEval x mem) with
         | (Some x) -> Some(-1 * x)
         | _ -> None
-
+let rec BEval bExp mem =
+    match (bExp, mem) with
+    |
 
 (*let rec evalb b =
     match b with
@@ -236,6 +238,7 @@ let rec compute n =
         printf "Enter a program in the Guarded Commands Language: "
         try
          // We parse the input string
+        printf "Arithmetic expression: 5+5 = %A" (AEval (PlusExpr (Num 5,Num 5)) ([],[]))
         let e = parse (Console.ReadLine())
         // and print the result of evaluating it
         Console.WriteLine("Parsed tokens (AST): {0} ", e )

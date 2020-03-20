@@ -39,7 +39,7 @@ type token =
   | ARRAY of (char)
   | X of (string)
   | VAR of (string)
-  | NUM of (double)
+  | NUM of (int)
 type tokenId = 
     | TOKEN_EOF
     | TOKEN_WHITESPACE

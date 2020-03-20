@@ -48,7 +48,7 @@ type token =
   | ARRAY of (char)
   | X of (string)
   | VAR of (string)
-  | NUM of (double)
+  | NUM of (int)
 // This type is used to give symbolic names to token indexes, useful for error messages
 type tokenId = 
     | TOKEN_EOF
@@ -525,7 +525,7 @@ let _fsyacc_reductions ()  =    [|
                  : a));
 # 526 "CalculatorParser.fs"
         (fun (parseState : FSharp.Text.Parsing.IParseState) ->
-            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : double)) in
+            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : int)) in
             Microsoft.FSharp.Core.Operators.box
                 (
                    (
