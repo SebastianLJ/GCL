@@ -29,6 +29,11 @@ open System
   | GteExpr of (a * a)
   | LtExpr of (a * a)
   | LteExpr of (a * a)
+  
+type Action = VAsgn of String * a
+              | AAsgn of char * a * a
+              | Skip
+              | Test of b
  type GC =
   | FuncExpr of (b * C)
   | ConcExpr of (GC * GC)
