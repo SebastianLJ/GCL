@@ -37,20 +37,18 @@ let updateArr c index value memory =
 
 let rec evalASyntax a =
     match a with
-    | Num(_) -> true
-    | Var(_) -> true
-    | Array(_) -> true
-    | PlusExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | MinusExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | TimesExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | DivExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | PowExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | UMinusExpr(x) -> evalASyntax (x)
+    | PlusExpr(x, y)    -> evalASyntax x && evalASyntax y
+    | MinusExpr(x, y)   -> evalASyntax x && evalASyntax y
+    | TimesExpr(x, y)   -> evalASyntax x && evalASyntax y
+    | DivExpr(x, y)     -> evalASyntax x && evalASyntax y
+    | PowExpr(x, y)     -> evalASyntax x && evalASyntax y
+    | UMinusExpr x      -> evalASyntax x
+    | _                 -> true
 
 let rec AEval aExp mem =
     match (aExp, mem) with
-    | (Num(x), _) -> Some x
-    | (Var(x), (xs, _)) -> Some(snd (List.find (fun (id, _) -> id = x) (xs)))
+    | (Num x, _) -> Some x
+    | (Var x, (xs, _)) -> Some(snd (List.find (fun (id, _) -> id = x) xs))
     | (Array(c, a), (_, ys)) ->
         match (AEval a mem) with
         | Some i -> Some(List.item i (snd (List.find (fun (id, _) -> id = c) ys)))
@@ -75,68 +73,68 @@ let rec AEval aExp mem =
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some((int) ((float x) ** (float y)))
         | _ -> None
-    | (UMinusExpr(x), mem) ->
+    | (UMinusExpr x, mem) ->
         match (AEval x mem) with
         | (Some x) -> Some(-1 * x)
         | _ -> None
 
-let rec BEval bExp mem =
-    match (bExp, mem) with
-    | (True, _) -> Some true
-    | (False, _) -> Some false
-    | (AndExpr(x, y), mem) ->
+let rec BEval bExp mem=
+    match bExp with
+    | True -> Some true
+    | False -> Some false
+    | AndExpr(x, y) ->
         match (BEval x mem, BEval y mem) with
         | (Some x, Some y) ->
             match x with
-            | true -> Some(y)
+            | true -> Some y
             | false -> Some false
         | _ -> None
-    | (AndHardExpr(x, y), mem) ->
-        match (BEval x mem) with
+    | AndHardExpr(x, y) ->
+        match BEval x mem with
         | (Some x) ->
             match x with
             | true -> BEval y mem
             | false -> Some false
         | _ -> None
-    | (OrExpr(x, y), mem) ->
+    | OrExpr(x, y) ->
         match (BEval x mem, BEval y mem) with
         | (Some x, Some y) ->
             match x with
             | true -> Some true
-            | false -> Some(y)
+            | false -> Some y
         | _ -> None
-    | (OrHardExpr(x, y), mem) ->
-        match (BEval x mem) with
+    | OrHardExpr(x, y) ->
+        match BEval x mem with
         | (Some x) ->
             match x with
             | true -> Some true
             | false -> BEval y mem
         | _ -> None
-    | (NotExpr(x), mem) ->
-        match (BEval x mem) with
-        | (Some x) -> Some(not x)
+    | NotExpr x ->
+        match BEval x mem with
+        | Some x -> Some(not x)
         | _ -> None
-    | (EqualExpr(x, y), mem) ->
+    | EqualExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x = y)
         | _ -> None
-    | (NEqualExpr(x, y), mem) ->
+    | NEqualExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
-        | (Some x, Some y) -> Some(not (x = y))
+        | (Some x, Some y) -> Some(x <> y)
         | _ -> None
-    | (GtExpr(x, y), mem) ->
+    | GtExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x > y)
         | _ -> None
-    | (GteExpr(x, y), mem) ->
+    | GteExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x >= y)
         | _ -> None
-    | (LtExpr(x, y), mem) ->
+    | LtExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x < y)
         | _ -> None
-    | (LteExpr(x, y), mem) ->
+    | LteExpr(x, y) ->
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x <= y)
         | _ -> None
@@ -160,19 +158,19 @@ let rec SEM action memory : mem option =
     
 let rec evalBSyntax b =
     match b with
-    | True -> true
-    | False -> true
-    | AndHardExpr(x, y) -> evalBSyntax (x) && evalBSyntax (y)
-    | OrHardExpr(x, y) -> evalBSyntax (x) && evalBSyntax (y)
-    | AndExpr(x, y) -> evalBSyntax x && evalBSyntax y
-    | OrExpr(x, y) -> evalBSyntax x && evalBSyntax y
-    | NotExpr(x) -> evalBSyntax (x)
-    | EqualExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | NEqualExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | GtExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | GteExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | LtExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
-    | LteExpr(x, y) -> evalASyntax (x) && evalASyntax (y)
+    | True                 -> true
+    | False                -> true
+    | AndHardExpr(x, y)    -> evalBSyntax x && evalBSyntax y
+    | OrHardExpr(x, y)     -> evalBSyntax x && evalBSyntax y
+    | AndExpr(x, y)        -> evalBSyntax x && evalBSyntax y
+    | OrExpr(x, y)         -> evalBSyntax x && evalBSyntax y
+    | NotExpr x           -> evalBSyntax x
+    | EqualExpr(x, y) -> evalASyntax x && evalASyntax y
+    | NEqualExpr(x, y) -> evalASyntax x && evalASyntax y
+    | GtExpr(x, y) -> evalASyntax x && evalASyntax y
+    | GteExpr(x, y) -> evalASyntax x && evalASyntax y
+    | LtExpr(x, y) -> evalASyntax x && evalASyntax y
+    | LteExpr(x, y) -> evalASyntax x && evalASyntax y
 
 
 let rec evalCSyntax c =
@@ -180,8 +178,8 @@ let rec evalCSyntax c =
     | AssignExpr(_, y) -> evalASyntax y
     | AssignArrExpr(_, y, z) -> evalASyntax y && evalASyntax z
     | SeparatorExpr(x, y) -> evalCSyntax x && evalCSyntax y
-    | IfExpr(x) -> evalGCSyntax (x)
-    | DoExpr(x) -> evalGCSyntax (x)
+    | IfExpr x -> evalGCSyntax x
+    | DoExpr x -> evalGCSyntax x
     | Skip -> true
 
 and evalGCSyntax gc =
@@ -191,11 +189,11 @@ and evalGCSyntax gc =
 
 let rec doneGC gc =
     match gc with
-    | FuncExpr(b, _) -> NotExpr(b)
+    | FuncExpr(b, _) -> NotExpr b
     | ConcExpr(gc1, gc2) -> AndExpr(doneGC gc1, doneGC gc2)
 
 let rec stringifyA = function
-    | Num(x) -> string x
+    | Num x -> string x
     | Var(x) -> x
     | Array(x, i) -> string x + "[" + stringifyA i + "]"
     | PlusExpr(x, y) -> stringifyA x + "+" + stringifyA y
