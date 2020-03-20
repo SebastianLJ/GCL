@@ -181,7 +181,7 @@ and tokenize  lexbuf =
           )
   | 9 -> ( 
 # 35 "CalculatorLexer.fsl"
-                                ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
+                                 ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
 # 185 "CalculatorLexer.fs"
           )
   | 10 -> ( 

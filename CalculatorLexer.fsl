@@ -32,7 +32,7 @@ rule tokenize = parse
 | " od"         { OD }
 | "true"        { TRUE }
 | "false"       { FALSE }
-| array         {ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| array         { ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
 | x             { VAR(LexBuffer<_>.LexemeString lexbuf) }
 | ":="          { ASSIGN }
 | ';'           { SEPARATOR }

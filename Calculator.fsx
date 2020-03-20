@@ -33,7 +33,7 @@ let rec evalASyntax a =
     match a with
     | Num(_) -> true
     | Var(_) -> true
-    | A(_) -> true
+    | Array(_) -> true
     | PlusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | MinusExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | TimesExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
@@ -110,7 +110,7 @@ let rec doneGC gc =
 let rec stringifyA = function
     | Num(x) -> string x
     | Var(x) -> x
-    | A(x) -> string x
+    | Array(x,i) -> string x + "[" + stringifyA i + "]"
     | PlusExpr(x,y)  -> stringifyA x + "+" + stringifyA y
     | MinusExpr(x,y) -> stringifyA x + "-" + stringifyA y
     | TimesExpr(x,y) -> stringifyA x + "*" + stringifyA y

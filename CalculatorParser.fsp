@@ -56,42 +56,43 @@ start: cExpr EOF             { $1 }
 // written in the yacc format:
 
 cExpr:
-  | VAR ASSIGN aExpr                       { AssignExpr($1, $3) }
-  | ARRAY LBRACK aExpr RBRACK ASSIGN aExpr { AssignArrExpr($1, $3, $6) }
-  | cExpr SEPARATOR cExpr                  { SeparatorExpr($1, $3) }
-  | IF gcExpr FI                           { IfExpr($2) }
-  | DO gcExpr OD                           { DoExpr($2) }
-  | SKIP                                   { Skip }
+  | VAR ASSIGN aExpr                        { AssignExpr($1, $3)         }
+  | ARRAY LBRACK aExpr RBRACK ASSIGN aExpr  { AssignArrExpr($1, $3, $6)  }
+  | cExpr SEPARATOR cExpr                   { SeparatorExpr($1, $3)      }
+  | IF gcExpr FI                            { IfExpr($2)                 }
+  | DO gcExpr OD                            { DoExpr($2)                 }
+  | SKIP                                    { Skip                       }
 
 gcExpr:
-  | bExpr FUNC cExpr    { FuncExpr($1, $3) }
-  | gcExpr CONC gcExpr  { ConcExpr($1, $3) }
+  | bExpr FUNC cExpr                        { FuncExpr($1, $3) }
+  | gcExpr CONC gcExpr                      { ConcExpr($1, $3) }
 
 aExpr:
-  | aExpr PLUS aExpr    { PlusExpr($1,$3) }
-  | aExpr MINUS aExpr   { MinusExpr($1,$3) }
-  | aExpr TIMES aExpr   { TimesExpr($1,$3) }
-  | aExpr DIV aExpr     { DivExpr($1,$3) }
-  | aExpr POW aExpr     { PowExpr($1,$3) }
-  | MINUS aExpr         { UMinusExpr($2) }
-  | NUM                 { Num($1) }
-  | VAR                 { Var($1) }
-  | LPAR aExpr RPAR     { $2 }
+  | aExpr PLUS aExpr                        { PlusExpr($1,$3)   }
+  | aExpr MINUS aExpr                       { MinusExpr($1,$3)  }
+  | aExpr TIMES aExpr                       { TimesExpr($1,$3)  }
+  | aExpr DIV aExpr                         { DivExpr($1,$3)    }
+  | aExpr POW aExpr                         { PowExpr($1,$3)    }
+  | ARRAY LBRACK aExpr RBRACK               { Array($1,$3)      }
+  | MINUS aExpr                             { UMinusExpr($2)    }
+  | NUM                                     { Num($1)           }
+  | VAR                                     { Var($1)           }
+  | LPAR aExpr RPAR                         { $2                }
 
 bExpr:
-  | TRUE                { True }
-  | FALSE               { False }
-  | bExpr AND bExpr     { AndExpr($1, $3) }
-  | bExpr OR bExpr      { OrExpr($1, $3) }
-  | bExpr ANDH bExpr    { AndHardExpr($1, $3) }
-  | bExpr ORH bExpr     { OrHardExpr($1, $3) }
-  | NOT bExpr           { NotExpr($2) }
-  | aExpr EQUAL aExpr   { EqualExpr($1, $3) }
-  | aExpr NEQUAL aExpr  { NEqualExpr($1, $3) }
-  | aExpr GT aExpr      { GtExpr($1, $3) }
-  | aExpr GTE aExpr     { GteExpr($1, $3) }
-  | aExpr LT aExpr      { LtExpr($1, $3) }
-  | aExpr LTE aExpr     { LteExpr($1, $3) }
+  | TRUE                                    { True                  }
+  | FALSE                                   { False                 }
+  | bExpr AND bExpr                         { AndExpr($1, $3)       }
+  | bExpr OR bExpr                          { OrExpr($1, $3)        }
+  | bExpr ANDH bExpr                        { AndHardExpr($1, $3)   }
+  | bExpr ORH bExpr                         { OrHardExpr($1, $3)    }
+  | NOT bExpr                               { NotExpr($2)           }
+  | aExpr EQUAL aExpr                       { EqualExpr($1, $3)     }
+  | aExpr NEQUAL aExpr                      { NEqualExpr($1, $3)    }
+  | aExpr GT aExpr                          { GtExpr($1, $3)        }
+  | aExpr GTE aExpr                         { GteExpr($1, $3)       }
+  | aExpr LT aExpr                          { LtExpr($1, $3)        }
+  | aExpr LTE aExpr                         { LteExpr($1, $3)       }
 
 // Again, the code annotation specifies the result of parsing
 // For example { TimesExpr($1,$3) } specifies that parsing with the production
