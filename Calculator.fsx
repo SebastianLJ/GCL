@@ -3,8 +3,8 @@ open System
 // This script implements our interactive calculator
 
 // We need to import a couple of modules, including the generated lexer and parser
-//#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
-#r "FsLexYacc.Runtime.10.0.0/lib/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+
 open FSharp.Text.Lexing
 open System
 #load "CalculatorTypesAST.fs"
@@ -42,6 +42,44 @@ let rec evalASyntax a =
     | DivExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | PowExpr(x,y) -> evalASyntax(x) && evalASyntax(y)
     | UMinusExpr(x) -> evalASyntax(x)
+
+
+let rec AEval aExp mem =
+    match (aExp, mem) with
+    | (Num(x), _) -> Some x
+    | (Var(x), (xs, _)) -> Some(snd (List.find (fun (id, v) -> id = x) (xs)))
+    | (Array(c, a), (_, ys)) ->
+        match (AEval a mem) with
+        | Some i -> Some(List.item i (snd (List.find (fun (id, _) -> id = c) ys)))
+        | _ -> None
+    | (PlusExpr(x, y), mem) ->
+        match (AEval x mem, AEval y mem) with
+        | (Some x, Some y) -> Some(x + y)
+        | _ -> None
+
+    | (MinusExpr(x, y), mem) ->
+        match (AEval x mem, AEval y mem) with
+        | (Some x, Some y) -> Some(x - y)
+        | _ -> None
+
+    | (TimesExpr(x, y), mem) ->
+        match (AEval x mem, AEval y mem) with
+        | (Some x, Some y) -> Some(x * y)
+        | _ -> None
+    | (DivExpr(x, y), mem) ->
+        match (AEval x mem, AEval y mem) with
+        | (Some x, Some y) -> Some(x / y)
+        | _ -> None
+
+    | (PowExpr(x, y), mem) ->
+        match (AEval x mem, AEval y mem) with
+        | (Some x, Some y) -> Some((int) ((float x) ** (float y)))
+        | _ -> None
+    | (UMinusExpr(x), mem) ->
+        match (AEval x mem) with
+        | (Some x) -> Some(-1 * x)
+        | _ -> None
+
 
 (*let rec evalb b =
     match b with
