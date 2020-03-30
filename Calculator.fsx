@@ -48,7 +48,7 @@ let rec evalASyntax a =
 let rec AEval aExp mem =
     match (aExp, mem) with
     | (Num x, _) -> Some x
-    | (Var x, (xs, _)) -> Some(snd (List.find (fun (id, _) -> id = x) xs))
+    | (Var x, (xs, _)) -> try Some(snd (List.find (fun (id, _) -> id = x) xs)) with err -> failwith ("The variable " + x + " might not have been initialized")
     | (Array(c, a), (_, ys)) ->
         match (AEval a mem) with
         | Some i -> Some(List.item i (snd (List.find (fun (id, _) -> id = c) ys)))
@@ -78,7 +78,7 @@ let rec AEval aExp mem =
         | (Some x) -> Some(-1 * x)
         | _ -> None
 
-let rec BEval bExp mem=
+let rec BEval bExp mem =
     match bExp with
     | True -> Some true
     | False -> Some false
@@ -138,24 +138,71 @@ let rec BEval bExp mem=
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x <= y)
         | _ -> None
+        
 
 type mem = (string*int) list * (char*int list) list
-let isVarInDomain var memory  = true // TODO 
-let isArrInDomain c index memory = true // TODO
-let rec SEM action memory : mem option =
-    match action with
-    | Action.Skip -> Some memory
-    | VAsgn (var, value)    -> match (AEval value memory, isVarInDomain var memory) with
-                               | (Some value, true)       -> Some (updateVar var value (fst memory), snd memory) // TODO make method that takes a memory and updates it
-                               | _                        -> None
-    | AAsgn (c,i,a)         -> match (AEval i memory, AEval a memory, isArrInDomain c i memory) with
-                               | (Some z1, Some z2, true) -> Some (updateArr c z1 z2 memory)
-                               | _                        -> None
-                           
-    | Test b                -> match BEval b memory with
-                               | Some true -> Some memory
-                               | _         -> None
+let isVarInDomain var memory = List.exists (fun (v,_) -> v = var) (fst memory)
     
+let isArrInDomain c index memory =
+    let rec findIndex arr i =
+        match arr with
+        | [] -> false
+        | _ when i = 0 -> true
+        | _::arr -> findIndex arr (i-1)
+    match (List.tryFind (fun (id,_) -> id = c) (snd memory)) with
+    | Some array -> findIndex (snd array) index
+    | _          -> false
+    
+let sem action memory =
+    match action with
+    | Action.Skip        -> Some memory
+    | VAsgn (var, value) -> match (AEval value memory, isVarInDomain var memory) with
+                            | (Some value, true) -> Some (updateVar var value (fst memory), snd memory)
+                            | _                  -> None
+    | AAsgn (c,i,a)      -> match (AEval i memory, AEval a memory) with
+                            | (Some z1, Some z2) when isArrInDomain c z1 memory -> Some (updateArr c z1 z2 memory)
+                            | _                                                 -> None
+                           
+    | Test b             -> match BEval b memory with
+                            | Some true -> Some memory
+                            | _         -> None
+                            
+
+let transition pg sem (q,mem) =
+    let E = List.filter (fun (qStart,_,_) -> qStart = q) pg
+    let rec trans edges =
+        match edges with
+        | []                      -> []
+        | (_, action, qTo)::edges -> match sem action mem with
+                                     | Some mem' -> (qTo, mem') :: trans edges
+                                     | None      -> trans edges
+    trans E
+    
+let rec iterate pg sem (q,mem) c =
+    match transition pg sem (q,mem) with
+    | []               -> printfn "%A" (q,mem)
+                          (q,mem)
+    | t::_ when c > 0  -> printfn "%A" t
+                          iterate pg sem t (c-1)
+    | _                -> printfn "%A" (q,mem)
+                          (q,mem)
+    
+let interpret pg memStart =
+    iterate pg sem ("qStart", memStart) 40
+    
+let stringifyMem mem =
+    let rec iteri arr array i acc =
+        match array with
+        | [] -> acc
+        | x::xs -> iteri arr xs (i+1) (acc + string arr + "[" + string i + "]: " + string x + "\n")
+    List.fold (fun acc (var, value) -> acc + var + ": " + string value + "\n") "" (fst mem)
+    + List.fold (fun acc (arr, array) -> acc + iteri arr array 0 "") "" (snd mem)
+    
+let generateTerminalInformation (q,mem) =
+    "status: " + if q = "qEnd" then "terminated\n" else "stuck\n"
+    + "Node: " + q + "\n"
+    + stringifyMem mem
+
 let rec evalBSyntax b =
     match b with
     | True                 -> true
@@ -164,13 +211,13 @@ let rec evalBSyntax b =
     | OrHardExpr(x, y)     -> evalBSyntax x && evalBSyntax y
     | AndExpr(x, y)        -> evalBSyntax x && evalBSyntax y
     | OrExpr(x, y)         -> evalBSyntax x && evalBSyntax y
-    | NotExpr x           -> evalBSyntax x
-    | EqualExpr(x, y) -> evalASyntax x && evalASyntax y
-    | NEqualExpr(x, y) -> evalASyntax x && evalASyntax y
-    | GtExpr(x, y) -> evalASyntax x && evalASyntax y
-    | GteExpr(x, y) -> evalASyntax x && evalASyntax y
-    | LtExpr(x, y) -> evalASyntax x && evalASyntax y
-    | LteExpr(x, y) -> evalASyntax x && evalASyntax y
+    | NotExpr x            -> evalBSyntax x
+    | EqualExpr(x, y)      -> evalASyntax x && evalASyntax y
+    | NEqualExpr(x, y)     -> evalASyntax x && evalASyntax y
+    | GtExpr(x, y)         -> evalASyntax x && evalASyntax y
+    | GteExpr(x, y)        -> evalASyntax x && evalASyntax y
+    | LtExpr(x, y)         -> evalASyntax x && evalASyntax y
+    | LteExpr(x, y)        -> evalASyntax x && evalASyntax y
 
 
 let rec evalCSyntax c =
@@ -211,7 +258,7 @@ let rec stringifyB = function
     | AndHardExpr(x, y) -> stringifyB x + "&&" + stringifyB y
     | OrHardExpr(x, y) -> stringifyB x + "||" + stringifyB y
     | NotExpr(x) -> "!" + "(" + stringifyB x + ")"
-    | EqualExpr(x, y) -> stringifyA x + "==" + stringifyA y
+    | EqualExpr(x, y) -> stringifyA x + "=" + stringifyA y
     | NEqualExpr(x, y) -> stringifyA x + "!=" + stringifyA y
     | GtExpr(x, y) -> stringifyA x + ">" + stringifyA y
     | GteExpr(x, y) -> stringifyA x + ">=" + stringifyA y
@@ -264,13 +311,41 @@ and edgesD qS qE c n =
 let rec stringify action =
     match action with
     | VAsgn (x,a)    -> x + ":=" + stringifyA a
-    | AAsgn (x,i,a)  -> string x + "[" + stringifyA i + "]" + stringifyA a
+    | AAsgn (x,i,a)  -> string x + "[" + stringifyA i + "]" + ":=" + stringifyA a
     | Action.Skip    -> "skip"
     | Test b         -> stringifyB b
 
-let rec graphVizify = function
+let rec graphVizifyHelper = function
     | [] -> ""
-    | (qs, label, qe)::xs -> qs + " -> " + qe + " [label = \"" + stringify label + "\"];\n" + graphVizify xs
+    | (qs, label, qe)::xs -> qs + " -> " + qe + " [label = \"" + stringify label + "\"];\n" + graphVizifyHelper xs
+
+let graphVizify pg = "digraph program_graph {rankdir=LR;\nnode [shape = circle]; q▷;\nnode [shape = doublecircle]; q◀;\nnode [shape = circle]\n" +
+                      graphVizifyHelper pg + "}"
+
+
+let stripString (stripChars:string) (text:string) =
+    text.Split(stripChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries) |> String.Concat
+//let rec makeMemoryFromUserInput memInput = let strippedString = stripString " " memInput
+(*let rec getInitialMemory e = printfn "Enter initial memory (FORMAT: x = 1, y = 42, A = [1, 2, 4, 6], ...) "
+                             let memInput = Console.ReadLine()
+                             try
+                                 let memory = makeMemoryFromUserInput memInput
+                                 printfn "Initial memory: %A" memory
+                                 printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory))
+                             with err -> printfn "%s" (err.Message)
+                                         getInitialMemory e
+*)
+
+let rec getUserInputDOrNd e =
+    printfn "Deterministic or non-deterministic program graph (d/nd)?"
+    let pg = Console.ReadLine()
+    if (pg = "nd") then
+        let programGraph = (edgesC "qStart" "qEnd" e 1)
+        printfn "NPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
+    elif (pg = "d") then
+        let programGraph = (edgesD "qStart" "qEnd" e 1)
+        printfn "DPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
+    else getUserInputDOrNd e
 
 let parse input =
     // translate string into a buffer of characters
@@ -281,30 +356,24 @@ let parse input =
     res
 
 // We implement here the function that interacts with the user
-let rec compute n =
-    if n = 0 then
-        printfn "Bye bye"
+let rec guardedCommandLanguageRunner n =
+    printf "Enter a program in the Guarded Commands Language: "
+    let input = Console.ReadLine()
+    if (input = "exit") then printfn "Exiting Guarded Command Language"
     else
-        printfn "Arithmetic expression: 5+5 = %A" (AEval (PlusExpr (Num 5,Num 5)) ([],[]))
-        printf "Enter a program in the Guarded Commands Language: "
         try
-            // We parse the input string
-            let e = parse (Console.ReadLine())
-            // and print the result of evaluating it
+            let e = parse input
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
-            printf "Deterministic or non-deterministic program graph (d/nd)?"
-            let pg = Console.ReadLine()
-            if (pg = "nd") then
-                printfn "NPG: \n%A\n\nGraphViz formatted text: \n%s" (edgesC "qStart" "qEnd" e 1)
-                    (graphVizify (edgesC "qStart" "qEnd" e 1))
-            elif (pg = "d") then
-                printfn "DPG: \n%A\n\nGraphViz formatted text: \n%s" (edgesD "qStart" "qEnd" e 1)
-                    (graphVizify (edgesD "qStart" "qEnd" e 1))
-            compute n
-        with err ->
-            printfn "Invalid Syntax!"
-            compute (n - 1)
-
+            getUserInputDOrNd e
+            try
+                let memory = ([("i",0); ("j", 0); ("n",0); ("t",0)], [('A', [3;9;5;7;8]);('B',[-3;0])])
+                printfn "Initial memory: %A" memory
+                printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory))
+            with err -> printfn "%s" (err.Message)
+                        //getInitialMemory e
+        with err -> printfn "Invalid Syntax!"
+        
+        guardedCommandLanguageRunner n
 
 // Start interacting with the user
-compute 3
+guardedCommandLanguageRunner 3
