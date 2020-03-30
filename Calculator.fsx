@@ -1,4 +1,5 @@
 open System
+open System.Collections.Generic
 
 // This script implements our interactive calculator
 
@@ -51,7 +52,8 @@ let rec AEval aExp mem =
     | (Var x, (xs, _)) -> try Some(snd (List.find (fun (id, _) -> id = x) xs)) with err -> failwith ("The variable " + x + " might not have been initialized")
     | (Array(c, a), (_, ys)) ->
         match (AEval a mem) with
-        | Some i -> Some(List.item i (snd (List.find (fun (id, _) -> id = c) ys)))
+        | Some i -> try Some(List.item i (snd (List.find (fun (id, _) -> id = c) ys))) with | :? ArgumentException -> failwith ("Index out of bounds for array \'" + string c + "\' at index: " + string i)
+                                                                                            | :? KeyNotFoundException -> failwith ("The array \'" + string c + "\' might not have been initialized")
         | _ -> None
     | (PlusExpr(x, y), mem) ->
         match (AEval x mem, AEval y mem) with
@@ -141,17 +143,19 @@ let rec BEval bExp mem =
         
 
 type mem = (string*int) list * (char*int list) list
-let isVarInDomain var memory = List.exists (fun (v,_) -> v = var) (fst memory)
+let isVarInDomain var memory = match List.exists (fun (v,_) -> v = var) (fst memory) with
+                               | true -> true
+                               | false -> failwith ("The variable " + var + " might not have been initialized")
     
 let isArrInDomain c index memory =
     let rec findIndex arr i =
         match arr with
-        | [] -> false
+        | [] -> failwith ("Index out of bounds for array \'" + string c + "\' at index: " + string index)
         | _ when i = 0 -> true
         | _::arr -> findIndex arr (i-1)
     match (List.tryFind (fun (id,_) -> id = c) (snd memory)) with
     | Some array -> findIndex (snd array) index
-    | _          -> false
+    | _          -> failwith ("The array \'" + string c + "\' might not have been initialized")
     
 let sem action memory =
     match action with
