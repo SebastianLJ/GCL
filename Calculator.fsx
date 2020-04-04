@@ -19,15 +19,14 @@ open CalculatorParser
 #load "CalculatorLexer.fs"
 
 open CalculatorLexer
+
 #load "InputTypesAST.fs"
 
 open InputTypesAST
 
-
 #load "InputParser.fs"
 
 open InputParser
-
 
 #load "InputLexer.fs"
 
@@ -367,7 +366,7 @@ let rec setupArrAsList = function
      | Elems (x,y) -> x::setupArrAsList y
 
 let rec initializeMemory mem = function
-    | VarInit (varName, varValue) -> (initializeVar varName varValue (fst mem), snd mem)
+    | VarInit (varName, varValue) -> ((varName, varValue)::(fst mem), snd mem)
     | ArrInit (arrName, arr) -> ((fst mem), initializeArr (setupArrAsList arr) arrName 0 (snd mem))
     | SeqInit (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
 
