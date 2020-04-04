@@ -4,7 +4,7 @@ open System.Collections.Generic
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "FsLexYacc.Runtime.10.0.0/lib/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 
