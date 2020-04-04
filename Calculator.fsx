@@ -19,18 +19,21 @@ open CalculatorParser
 #load "CalculatorLexer.fs"
 
 open CalculatorLexer
-
 #load "InputTypesAST.fs"
 
 open InputTypesAST
+
+
+#load "InputParser.fs"
+
+open InputParser
+
 
 #load "InputLexer.fs"
 
 open InputLexer
 
-#load "InputParser.fs"
 
-open InputParser
 
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)
