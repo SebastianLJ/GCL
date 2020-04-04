@@ -4,7 +4,7 @@ open System.Collections.Generic
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "FsLexYacc.Runtime.10.0.0/lib/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 
@@ -354,12 +354,14 @@ let stripString (stripChars:string) (text:string) =
                                          getInitialMemory e
 *)
 
+(*
 let initializeVar varName varValue mem = updateVar varName varValue (mem)
+*)
 
-let rec initializeArr xs arrName index arrMem =
-    match (index,xs) with
-    | (_, []) -> arrMem
-    |(index,value::xs) -> initializeArr xs arrName (index+1) (updateArr arrName index value arrMem)
+(*let rec initializeArr xs arrName arrMem =
+    match (xs) with
+    | ([]) -> arrMem
+    |(value::xs) -> (arrName, value :: initializeArr xs arrName xs arrName (updateArr arrName index value arrMem)*)
 
 let rec setupArrAsList = function
      | NumElem x -> [x]
@@ -367,7 +369,7 @@ let rec setupArrAsList = function
 
 let rec initializeMemory mem = function
     | VarInit (varName, varValue) -> ((varName, varValue)::(fst mem), snd mem)
-    | ArrInit (arrName, arr) -> ((fst mem), initializeArr (setupArrAsList arr) arrName 0 (snd mem))
+    | ArrInit (arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr)::(snd mem))
     | SeqInit (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
 
 
