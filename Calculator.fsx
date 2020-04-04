@@ -1,10 +1,10 @@
 open System
 open System.Collections.Generic
 
-// This script implements our interactive calculator
+// This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 open System
 
@@ -20,6 +20,18 @@ open CalculatorParser
 
 open CalculatorLexer
 
+#load "InputTypesAST.fs"
+
+open InputTypesAST
+
+#load "InputLexer.fs"
+
+open InputLexer
+
+#load "InputParser.fs"
+
+open InputParser
+
 // We define the evaluation function recursively, by induction on the structure
 // of arithmetic expressions (AST of type  expr)
 let updateVar var value l =
@@ -33,8 +45,8 @@ let updateArr c index value memory =
         match (index, arr) with
         | (0, _::arr) -> value::arr
         | (n, a::arr) -> a::updateIndexValue (n-1) arr
-        | _           -> failwith "It should not be possible to get here!"
-    (fst memory, List.map (fun (k, arr) -> if k=c then k, updateIndexValue index arr else k, arr) (snd memory))
+        | _           -> failwith "It should not be possible to get here!" //Isn't it possible to get here if you input a negative index? 
+    List.map (fun (k, arr) -> if k=c then k, updateIndexValue index arr else k, arr) (memory)
 
 let rec evalASyntax a =
     match a with
@@ -164,7 +176,7 @@ let sem action memory =
                             | (Some value, true) -> Some (updateVar var value (fst memory), snd memory)
                             | _                  -> None
     | AAsgn (c,i,a)      -> match (AEval i memory, AEval a memory) with
-                            | (Some z1, Some z2) when isArrInDomain c z1 memory -> Some (updateArr c z1 z2 memory)
+                            | (Some z1, Some z2) when isArrInDomain c z1 memory -> Some (fst memory, updateArr c z1 z2 (snd memory))
                             | _                                                 -> None
                            
     | Test b             -> match BEval b memory with
@@ -340,6 +352,23 @@ let stripString (stripChars:string) (text:string) =
                                          getInitialMemory e
 *)
 
+let initializeVar varName varValue mem = updateVar varName varValue (mem)
+
+let rec initializeArr xs arrName index arrMem =
+    match (index,xs) with
+    | (_, []) -> arrMem
+    |(index,value::xs) -> initializeArr xs arrName (index+1) (updateArr arrName index value arrMem)
+
+let rec setupArrAsList = function
+     | NumElem x -> [x]
+     | Elems (x,y) -> x::setupArrAsList y
+
+let rec initializeMemory mem = function
+    | VarInit (varName, varValue) -> (initializeVar varName varValue (fst mem), snd mem)
+    | ArrInit (arrName, arr) -> ((fst mem), initializeArr (setupArrAsList arr) arrName 0 (snd mem))
+    | SeqInit (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
+
+
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
@@ -351,6 +380,13 @@ let rec getUserInputDOrNd e =
         printfn "DPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
     else getUserInputDOrNd e
 
+let parseInitMem input =
+    // translate string into a buffer of characters
+    let lexbuf = LexBuffer<char>.FromString input
+    // translate the buffer into a stream of tokens and parse them
+    let res = InputParser.start InputLexer.tokenize lexbuf
+    // return the result of parsing (i.e. value of type "expr")
+    res
 let parse input =
     // translate string into a buffer of characters
     let lexbuf = LexBuffer<char>.FromString input
@@ -358,7 +394,6 @@ let parse input =
     let res = CalculatorParser.start CalculatorLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
-
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printf "Enter a program in the Guarded Commands Language: "
@@ -370,9 +405,15 @@ let rec guardedCommandLanguageRunner n =
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
             getUserInputDOrNd e
             try
+                Console.WriteLine("Write the initial memory: ")
+                let initialmem = Console.ReadLine()
+                let k = parseInitMem initialmem
+                let memory2 =  initializeMemory ([], []) k
+(*
                 let memory = ([("i",0); ("j", 0); ("n",0); ("t",0)], [('A', [3;9;5;7;8]);('B',[-3;0])])
-                printfn "Initial memory: %A" memory
-                printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory))
+*)
+                printfn "Initial memory: %A" memory2
+                printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
             with err -> printfn "%s" (err.Message)
                         //getInitialMemory e
         with err -> printfn "Invalid Syntax!"
