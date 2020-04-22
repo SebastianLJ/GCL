@@ -10,7 +10,7 @@ open InputParser
 let trans : uint16[] array = 
     [| 
     (* State 0 *)
-     [| 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 1us; 1us; 65535us; 65535us; 1us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 1us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 12us; 7us; 13us; 65535us; 65535us; 2us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 65535us; 65535us; 65535us; 6us; 65535us; 65535us; 65535us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 8us; 65535us; 9us; 65535us; 65535us; 65535us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 10us; 65535us; 11us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 14us; |];
+     [| 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 1us; 1us; 65535us; 65535us; 1us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 1us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 13us; 7us; 14us; 65535us; 65535us; 2us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 3us; 65535us; 65535us; 65535us; 6us; 65535us; 65535us; 65535us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 4us; 8us; 65535us; 9us; 65535us; 65535us; 65535us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 5us; 11us; 65535us; 12us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 10us; |];
     (* State 1 *)
      [| 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; |];
     (* State 2 *)
@@ -48,85 +48,85 @@ let trans : uint16[] array =
     (* State 18 *)
      [| 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 18us; 18us; 18us; 18us; 18us; 18us; 18us; 18us; 18us; 18us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; 65535us; |];
     |] 
-let actions : uint16[] = [|65535us; 0us; 1us; 1us; 2us; 3us; 4us; 5us; 6us; 7us; 8us; 9us; 10us; 10us; 14us; 3us; 65535us; 65535us; 1us; |]
+let actions : uint16[] = [|65535us; 0us; 1us; 1us; 2us; 3us; 4us; 5us; 6us; 7us; 8us; 9us; 10us; 11us; 11us; 3us; 65535us; 65535us; 1us; |]
 let _fslex_tables = FSharp.Text.Lexing.UnicodeTables.Create(trans,actions)
 let rec _fslex_dummy () = _fslex_dummy() 
 // Rule tokenize
 and tokenize  lexbuf =
   match _fslex_tables.Interpret(0,lexbuf) with
   | 0 -> ( 
-# 27 "InputLexer.fsl"
+# 29 "InputLexer.fsl"
                                  tokenize lexbuf 
 # 60 "InputLexer.fs"
           )
   | 1 -> ( 
-# 28 "InputLexer.fsl"
+# 30 "InputLexer.fsl"
                                  NUM(int (LexBuffer<_>.LexemeString lexbuf)) 
 # 65 "InputLexer.fs"
           )
   | 2 -> ( 
-# 29 "InputLexer.fsl"
+# 31 "InputLexer.fsl"
                                  ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
 # 70 "InputLexer.fs"
           )
   | 3 -> ( 
-# 30 "InputLexer.fsl"
+# 32 "InputLexer.fsl"
                                  VAR(LexBuffer<_>.LexemeString lexbuf) 
 # 75 "InputLexer.fs"
           )
   | 4 -> ( 
-# 31 "InputLexer.fsl"
+# 33 "InputLexer.fsl"
                                  ASSIGN 
 # 80 "InputLexer.fs"
           )
   | 5 -> ( 
-# 32 "InputLexer.fsl"
+# 34 "InputLexer.fsl"
                                  SEPARATOR 
 # 85 "InputLexer.fs"
           )
   | 6 -> ( 
-# 33 "InputLexer.fsl"
+# 35 "InputLexer.fsl"
                                  LBRACK 
 # 90 "InputLexer.fs"
           )
   | 7 -> ( 
-# 34 "InputLexer.fsl"
+# 36 "InputLexer.fsl"
                                  RBRACK 
 # 95 "InputLexer.fs"
           )
   | 8 -> ( 
-# 35 "InputLexer.fsl"
-                                 LCBRACK 
+# 37 "InputLexer.fsl"
+                                 EOF 
 # 100 "InputLexer.fs"
           )
   | 9 -> ( 
-# 36 "InputLexer.fsl"
-                                 RCBRACK 
+# 38 "InputLexer.fsl"
+                                 LCBRACK 
 # 105 "InputLexer.fs"
           )
   | 10 -> ( 
-# 37 "InputLexer.fsl"
-                                 SIGN (Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
+# 39 "InputLexer.fsl"
+                                 RCBRACK 
 # 110 "InputLexer.fs"
           )
   | 11 -> ( 
-# 38 "InputLexer.fsl"
-                                 PLUS 
+# 40 "InputLexer.fsl"
+                                 SIGN (Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
 # 115 "InputLexer.fs"
           )
   | 12 -> ( 
-# 39 "InputLexer.fsl"
-                                 MINUS 
+# 41 "InputLexer.fsl"
+                                 PLUS 
 # 120 "InputLexer.fs"
           )
   | 13 -> ( 
-# 40 "InputLexer.fsl"
-                                 ZERO 
+# 42 "InputLexer.fsl"
+                                 MINUS 
 # 125 "InputLexer.fs"
           )
   | 14 -> ( 
-# 41 "InputLexer.fsl"
-                                 EOF 
+# 43 "InputLexer.fsl"
+                                 ZERO 
 # 130 "InputLexer.fs"
           )
   | _ -> failwith "tokenize"

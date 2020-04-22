@@ -350,9 +350,9 @@ let rec setupArrAsList = function
      | Elems (x,y) -> x::setupArrAsList y
 
 let rec initializeMemory mem = function
-    | VarInit (varName, varValue) -> ((varName, varValue)::(fst mem), snd mem)
-    | ArrInit (arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr)::(snd mem))
-    | SeqInit (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
+    | ConVar (varName, varValue) -> ((varName, varValue)::(fst mem), snd mem)
+    | ConArr (arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr)::(snd mem))
+    | ConSeq (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
 
 
 
@@ -463,10 +463,10 @@ let BsignAnd x y =
         |(false,false) -> Set.empty.Add(false)
 let BsignOr x y =
          match(x,y) with
-        |(true, true) -> Set.empty.Add(true)
-        |(true, false) -> Set.empty.Add(true)
-        |(false, true) -> Set.empty.Add(true)
-        |(false, false) -> Set.empty.Add(true)
+         |(true, true) -> Set.empty.Add(true)
+         |(true, false) -> Set.empty.Add(true)
+         |(false, true) -> Set.empty.Add(true)
+         |(false, false) -> Set.empty.Add(true)
 let BsignAndH x y =
         match(x,y) with
         |(false, _) -> Set.empty.Add(false)

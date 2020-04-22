@@ -1,21 +1,24 @@
 ﻿module InputTypesAST
 open System
 
-type arr =
+type conArrContent =
   | NumElem of int
-  | Elems of int * arr
+  | Elems of int * conArrContent
 
-type init =
-  | VarInit of string * int
-  | ArrInit of char * arr
-  | SeqInit of init * init
+type conElement =
+  | ConVar of string * int
+  | ConArr of char * conArrContent
+  | ConSeq of conElement * conElement
 
-
-//Move below into separate file
-type signArr =
+type absArrContent =
   | SignElem of char
-  | SignArrElems of char * signArr
-type signInit =
-  | SignVarInit of string * char
-  | SignArrInit of char * signArr
-  | Sign of char
+  | SignArrElems of char * absArrContent
+type absElement =
+  | AbsVar of string * char
+  | AbsArr of char * absArrContent
+  //| Sign of char
+  | AbsSeq of absElement * absElement   
+type init =
+  | Ainit of absElement
+  | CInit of conElement
+
