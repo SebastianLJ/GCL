@@ -663,6 +663,7 @@ let rec guardedCommandLanguageRunner n =
                 Console.WriteLine("Write the initial memory: ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
+                printf "k: %A" k
                 let memory2 = initializeConcreteMemory k
  (*
                 let memory = ([("i",0); ("j", 0); ("n",0); ("t",0)], [('A', [3;9;5;7;8]);('B',[-3;0])])
