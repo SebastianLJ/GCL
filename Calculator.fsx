@@ -353,9 +353,6 @@ let rec initializeMemory mem = function
     | ConVar (varName, varValue) -> ((varName, varValue)::(fst mem), snd mem)
     | ConArr (arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr)::(snd mem))
     | ConSeq (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
-
-
-
 let signAdd x y =
     match(x,y) with
     |(Psign, Psign) -> Set.empty.Add(Psign)
@@ -412,46 +409,50 @@ let signUMin x =
         |Zsign -> Set.empty.Add(Zsign)
 
 let sign x = if x=0 then Zsign elif x>0 then Psign else Nsign
-let rec AsignOpp  = function 
-    |Num(x) -> Set.empty.Add (sign x)
-    |PlusExpr(x,y) ->
+let rec AsignOpp aExp mem  =
+    match(aExp, mem) with
+    |(Num(x),_) -> Set.empty.Add (sign x)
+    |(Var(x),(xs,_)) -> Set.empty.Add(try (snd (List.find (fun (id, _) -> id = x) xs)) with err -> failwith ("The variable " + x + " might not have been initialized"))
+    |(Array(c,a),(_,ys)) -> let index = AsignOpp a mem
+                            if (not (Set.intersect index (set [Zsign; Psign])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) ys)) else Set.empty
+    |(PlusExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in ( AsignOpp x) do
-           for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+           for j in (AsignOpp y mem) do
            k <- Set.union (signAdd i j) k
            printfn "k: %A" k
         k
-    |MinusExpr(x,y) ->
+    |(MinusExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-           for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+           for j in (AsignOpp y mem) do
            k <- Set.union (signSub i j) k
         k
    
-    |TimesExpr(x,y) ->
+    |(TimesExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-           for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+           for j in (AsignOpp y mem) do
            k <- Set.union (signMul i j) k
         k
      
-    |DivExpr(x,y) ->
+    |(DivExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in ( AsignOpp x) do
-           for j in (AsignOpp y) do
+        for i in ( AsignOpp x mem) do
+           for j in (AsignOpp y mem) do
            k <- Set.union (signDiv i j) k
         k
      
-    |UMinusExpr x ->
+    |(UMinusExpr x,_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
+        for i in (AsignOpp x mem) do
            k <- Set.union (signUMin i) k
         k
        
-    |PowExpr(x,y) ->
+    |(PowExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-           for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+           for j in (AsignOpp y mem) do
            k <- Set.union (signPow i j) k
         k
 
@@ -547,75 +548,77 @@ let BsignLte x y =
         |(Nsign, Zsign) -> Set.empty.Add(true)
         |(Zsign, Nsign) -> Set.empty.Add(false)
         |(Zsign, Zsign) -> Set.empty.Add(true)
-let rec BsignOpp = function
-    |True -> Set.empty.Add(true)
-    |False -> Set.empty.Add(false)
-    |AndExpr(x,y) ->
+let rec BsignOpp bExp mem =
+    match(bExp, mem) with
+    |(True,_) -> Set.empty.Add(true)
+    |(False,_) -> Set.empty.Add(false)
+    |(AndExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (BsignOpp x) do
-            for j in (BsignOpp y) do
+        for i in (BsignOpp x mem) do
+            for j in (BsignOpp y mem) do
                 k <- Set.union (BsignAnd i j) k
         k
         
-    |OrExpr(x,y) ->
+    |(OrExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (BsignOpp x) do
-            for j in (BsignOpp y) do
+        for i in (BsignOpp x mem) do
+            for j in (BsignOpp y mem) do
                 k <- Set.union (BsignOr i j) k
         k
-    |AndHardExpr(x,y) ->
+    |(AndHardExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (BsignOpp x) do
-            for j in (BsignOpp y) do
+        for i in (BsignOpp x mem) do
+            for j in (BsignOpp y mem) do
                 k <- Set.union (BsignAndH i j) k
         k
-    |OrHardExpr(x,y) ->
+    |(OrHardExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (BsignOpp x) do
-            for j in (BsignOpp y) do
+        for i in (BsignOpp x mem) do
+            for j in (BsignOpp y mem) do
                 k <- Set.union (BsignOrH i j) k
         k
-    |NotExpr(x) ->
+    |(NotExpr(x),_) ->
         let mutable k = Set.empty
-        for i in (BsignOpp x) do
+        for i in (BsignOpp x mem) do
                 k <- Set.union (BsignNot i) k
         k
-    |EqualExpr(x,y) ->
+    |(EqualExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignEqual i j) k
         k
-    |NEqualExpr(x,y) ->
+    |(NEqualExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignNEqual i j) k
         k
-    |GtExpr(x,y) ->
+    |(GtExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignGt i j) k
         k
-    |GteExpr(x,y) ->
+    |(GteExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignGte i j) k
         k
-    |LtExpr(x,y) ->
+    |(LtExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignLt i j) k
         k
-    |LteExpr(x,y) ->
+    |(LteExpr(x,y),_) ->
         let mutable k = Set.empty
-        for i in (AsignOpp x) do
-            for j in (AsignOpp y) do
+        for i in (AsignOpp x mem) do
+            for j in (AsignOpp y mem) do
                 k <- Set.union (BsignLte i j) k
         k
+
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
