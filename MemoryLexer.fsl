@@ -1,10 +1,10 @@
 ﻿// The generated lexer module will start with this code
 {
-module InputLexer
+module MemoryLexer
 open FSharp.Text.Lexing
 open System
 // open the module that defines the tokens
-open InputParser
+open MemoryParser
 }
 
 // We define macros for some regular expressions we will use later

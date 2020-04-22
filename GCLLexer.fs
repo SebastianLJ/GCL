@@ -1,12 +1,12 @@
-# 2 "CalculatorLexer.fsl"
+# 2 "GCLLexer.fsl"
  
-module CalculatorLexer
+module GCLLexer
 open FSharp.Text.Lexing
 open System
 // open the module that defines the tokens
-open CalculatorParser
+open GCLParser
 
-# 9 "CalculatorLexer.fs"
+# 9 "GCLLexer.fs"
 let trans : uint16[] array = 
     [| 
     (* State 0 *)
@@ -135,185 +135,185 @@ let rec _fslex_dummy () = _fslex_dummy()
 and tokenize  lexbuf =
   match _fslex_tables.Interpret(0,lexbuf) with
   | 0 -> ( 
-# 26 "CalculatorLexer.fsl"
+# 26 "GCLLexer.fsl"
                                  tokenize lexbuf 
-# 140 "CalculatorLexer.fs"
+# 140 "GCLLexer.fs"
           )
   | 1 -> ( 
-# 27 "CalculatorLexer.fsl"
+# 27 "GCLLexer.fsl"
                                  SKIP 
-# 145 "CalculatorLexer.fs"
+# 145 "GCLLexer.fs"
           )
   | 2 -> ( 
-# 28 "CalculatorLexer.fsl"
+# 28 "GCLLexer.fsl"
                                  NUM(int (LexBuffer<_>.LexemeString lexbuf)) 
-# 150 "CalculatorLexer.fs"
+# 150 "GCLLexer.fs"
           )
   | 3 -> ( 
-# 29 "CalculatorLexer.fsl"
+# 29 "GCLLexer.fsl"
                                  IF 
-# 155 "CalculatorLexer.fs"
+# 155 "GCLLexer.fs"
           )
   | 4 -> ( 
-# 30 "CalculatorLexer.fsl"
+# 30 "GCLLexer.fsl"
                                  FI 
-# 160 "CalculatorLexer.fs"
+# 160 "GCLLexer.fs"
           )
   | 5 -> ( 
-# 31 "CalculatorLexer.fsl"
+# 31 "GCLLexer.fsl"
                                  DO 
-# 165 "CalculatorLexer.fs"
+# 165 "GCLLexer.fs"
           )
   | 6 -> ( 
-# 32 "CalculatorLexer.fsl"
+# 32 "GCLLexer.fsl"
                                  OD 
-# 170 "CalculatorLexer.fs"
+# 170 "GCLLexer.fs"
           )
   | 7 -> ( 
-# 33 "CalculatorLexer.fsl"
+# 33 "GCLLexer.fsl"
                                  TRUE 
-# 175 "CalculatorLexer.fs"
+# 175 "GCLLexer.fs"
           )
   | 8 -> ( 
-# 34 "CalculatorLexer.fsl"
+# 34 "GCLLexer.fsl"
                                  FALSE 
-# 180 "CalculatorLexer.fs"
+# 180 "GCLLexer.fs"
           )
   | 9 -> ( 
-# 35 "CalculatorLexer.fsl"
+# 35 "GCLLexer.fsl"
                                  ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
-# 185 "CalculatorLexer.fs"
+# 185 "GCLLexer.fs"
           )
   | 10 -> ( 
-# 36 "CalculatorLexer.fsl"
+# 36 "GCLLexer.fsl"
                                  VAR(LexBuffer<_>.LexemeString lexbuf) 
-# 190 "CalculatorLexer.fs"
+# 190 "GCLLexer.fs"
           )
   | 11 -> ( 
-# 37 "CalculatorLexer.fsl"
+# 37 "GCLLexer.fsl"
                                  ASSIGN 
-# 195 "CalculatorLexer.fs"
+# 195 "GCLLexer.fs"
           )
   | 12 -> ( 
-# 38 "CalculatorLexer.fsl"
+# 38 "GCLLexer.fsl"
                                  SEPARATOR 
-# 200 "CalculatorLexer.fs"
+# 200 "GCLLexer.fs"
           )
   | 13 -> ( 
-# 39 "CalculatorLexer.fsl"
+# 39 "GCLLexer.fsl"
                                  FUNC 
-# 205 "CalculatorLexer.fs"
+# 205 "GCLLexer.fs"
           )
   | 14 -> ( 
-# 40 "CalculatorLexer.fsl"
+# 40 "GCLLexer.fsl"
                                  CONC 
-# 210 "CalculatorLexer.fs"
+# 210 "GCLLexer.fs"
           )
   | 15 -> ( 
-# 41 "CalculatorLexer.fsl"
+# 41 "GCLLexer.fsl"
                                  PLUS 
-# 215 "CalculatorLexer.fs"
+# 215 "GCLLexer.fs"
           )
   | 16 -> ( 
-# 42 "CalculatorLexer.fsl"
+# 42 "GCLLexer.fsl"
                                  MINUS 
-# 220 "CalculatorLexer.fs"
+# 220 "GCLLexer.fs"
           )
   | 17 -> ( 
-# 43 "CalculatorLexer.fsl"
+# 43 "GCLLexer.fsl"
                                  TIMES 
-# 225 "CalculatorLexer.fs"
+# 225 "GCLLexer.fs"
           )
   | 18 -> ( 
-# 44 "CalculatorLexer.fsl"
+# 44 "GCLLexer.fsl"
                                  DIV 
-# 230 "CalculatorLexer.fs"
+# 230 "GCLLexer.fs"
           )
   | 19 -> ( 
-# 45 "CalculatorLexer.fsl"
+# 45 "GCLLexer.fsl"
                                  POW 
-# 235 "CalculatorLexer.fs"
+# 235 "GCLLexer.fs"
           )
   | 20 -> ( 
-# 46 "CalculatorLexer.fsl"
+# 46 "GCLLexer.fsl"
                                  LPAR 
-# 240 "CalculatorLexer.fs"
+# 240 "GCLLexer.fs"
           )
   | 21 -> ( 
-# 47 "CalculatorLexer.fsl"
+# 47 "GCLLexer.fsl"
                                  RPAR 
-# 245 "CalculatorLexer.fs"
+# 245 "GCLLexer.fs"
           )
   | 22 -> ( 
-# 48 "CalculatorLexer.fsl"
+# 48 "GCLLexer.fsl"
                                  LBRACK 
-# 250 "CalculatorLexer.fs"
+# 250 "GCLLexer.fs"
           )
   | 23 -> ( 
-# 49 "CalculatorLexer.fsl"
+# 49 "GCLLexer.fsl"
                                  RBRACK 
-# 255 "CalculatorLexer.fs"
+# 255 "GCLLexer.fs"
           )
   | 24 -> ( 
-# 50 "CalculatorLexer.fsl"
+# 50 "GCLLexer.fsl"
                                  AND 
-# 260 "CalculatorLexer.fs"
+# 260 "GCLLexer.fs"
           )
   | 25 -> ( 
-# 51 "CalculatorLexer.fsl"
+# 51 "GCLLexer.fsl"
                                  ANDH 
-# 265 "CalculatorLexer.fs"
+# 265 "GCLLexer.fs"
           )
   | 26 -> ( 
-# 52 "CalculatorLexer.fsl"
+# 52 "GCLLexer.fsl"
                                  ORH 
-# 270 "CalculatorLexer.fs"
+# 270 "GCLLexer.fs"
           )
   | 27 -> ( 
-# 53 "CalculatorLexer.fsl"
+# 53 "GCLLexer.fsl"
                                  OR 
-# 275 "CalculatorLexer.fs"
+# 275 "GCLLexer.fs"
           )
   | 28 -> ( 
-# 54 "CalculatorLexer.fsl"
+# 54 "GCLLexer.fsl"
                                  NOT 
-# 280 "CalculatorLexer.fs"
+# 280 "GCLLexer.fs"
           )
   | 29 -> ( 
-# 55 "CalculatorLexer.fsl"
+# 55 "GCLLexer.fsl"
                                  EQUAL 
-# 285 "CalculatorLexer.fs"
+# 285 "GCLLexer.fs"
           )
   | 30 -> ( 
-# 56 "CalculatorLexer.fsl"
+# 56 "GCLLexer.fsl"
                                  NEQUAL 
-# 290 "CalculatorLexer.fs"
+# 290 "GCLLexer.fs"
           )
   | 31 -> ( 
-# 57 "CalculatorLexer.fsl"
+# 57 "GCLLexer.fsl"
                                  GT 
-# 295 "CalculatorLexer.fs"
+# 295 "GCLLexer.fs"
           )
   | 32 -> ( 
-# 58 "CalculatorLexer.fsl"
+# 58 "GCLLexer.fsl"
                                  GTE 
-# 300 "CalculatorLexer.fs"
+# 300 "GCLLexer.fs"
           )
   | 33 -> ( 
-# 59 "CalculatorLexer.fsl"
+# 59 "GCLLexer.fsl"
                                  LT 
-# 305 "CalculatorLexer.fs"
+# 305 "GCLLexer.fs"
           )
   | 34 -> ( 
-# 60 "CalculatorLexer.fsl"
+# 60 "GCLLexer.fsl"
                                  LTE 
-# 310 "CalculatorLexer.fs"
+# 310 "GCLLexer.fs"
           )
   | 35 -> ( 
-# 61 "CalculatorLexer.fsl"
+# 61 "GCLLexer.fsl"
                                  EOF 
-# 315 "CalculatorLexer.fs"
+# 315 "GCLLexer.fs"
           )
   | _ -> failwith "tokenize"
 
-# 3000000 "CalculatorLexer.fs"
+# 3000000 "GCLLexer.fs"

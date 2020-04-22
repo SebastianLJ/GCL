@@ -1,12 +1,12 @@
-# 2 "InputLexer.fsl"
+# 2 "MemoryLexer.fsl"
  
-module InputLexer
+module MemoryLexer
 open FSharp.Text.Lexing
 open System
 // open the module that defines the tokens
-open InputParser
+open MemoryParser
 
-# 9 "InputLexer.fs"
+# 9 "MemoryLexer.fs"
 let trans : uint16[] array = 
     [| 
     (* State 0 *)
@@ -55,80 +55,80 @@ let rec _fslex_dummy () = _fslex_dummy()
 and tokenize  lexbuf =
   match _fslex_tables.Interpret(0,lexbuf) with
   | 0 -> ( 
-# 29 "InputLexer.fsl"
+# 29 "MemoryLexer.fsl"
                                  tokenize lexbuf 
-# 60 "InputLexer.fs"
+# 60 "MemoryLexer.fs"
           )
   | 1 -> ( 
-# 30 "InputLexer.fsl"
+# 30 "MemoryLexer.fsl"
                                  NUM(int (LexBuffer<_>.LexemeString lexbuf)) 
-# 65 "InputLexer.fs"
+# 65 "MemoryLexer.fs"
           )
   | 2 -> ( 
-# 31 "InputLexer.fsl"
+# 31 "MemoryLexer.fsl"
                                  ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
-# 70 "InputLexer.fs"
+# 70 "MemoryLexer.fs"
           )
   | 3 -> ( 
-# 32 "InputLexer.fsl"
+# 32 "MemoryLexer.fsl"
                                  VAR(LexBuffer<_>.LexemeString lexbuf) 
-# 75 "InputLexer.fs"
+# 75 "MemoryLexer.fs"
           )
   | 4 -> ( 
-# 33 "InputLexer.fsl"
+# 33 "MemoryLexer.fsl"
                                  ASSIGN 
-# 80 "InputLexer.fs"
+# 80 "MemoryLexer.fs"
           )
   | 5 -> ( 
-# 34 "InputLexer.fsl"
+# 34 "MemoryLexer.fsl"
                                  SEPARATOR 
-# 85 "InputLexer.fs"
+# 85 "MemoryLexer.fs"
           )
   | 6 -> ( 
-# 35 "InputLexer.fsl"
+# 35 "MemoryLexer.fsl"
                                  LBRACK 
-# 90 "InputLexer.fs"
+# 90 "MemoryLexer.fs"
           )
   | 7 -> ( 
-# 36 "InputLexer.fsl"
+# 36 "MemoryLexer.fsl"
                                  RBRACK 
-# 95 "InputLexer.fs"
+# 95 "MemoryLexer.fs"
           )
   | 8 -> ( 
-# 37 "InputLexer.fsl"
+# 37 "MemoryLexer.fsl"
                                  EOF 
-# 100 "InputLexer.fs"
+# 100 "MemoryLexer.fs"
           )
   | 9 -> ( 
-# 38 "InputLexer.fsl"
+# 38 "MemoryLexer.fsl"
                                  LCBRACK 
-# 105 "InputLexer.fs"
+# 105 "MemoryLexer.fs"
           )
   | 10 -> ( 
-# 39 "InputLexer.fsl"
+# 39 "MemoryLexer.fsl"
                                  RCBRACK 
-# 110 "InputLexer.fs"
+# 110 "MemoryLexer.fs"
           )
   | 11 -> ( 
-# 40 "InputLexer.fsl"
+# 40 "MemoryLexer.fsl"
                                  SIGN (Char.Parse(LexBuffer<_>.LexemeString lexbuf)) 
-# 115 "InputLexer.fs"
+# 115 "MemoryLexer.fs"
           )
   | 12 -> ( 
-# 41 "InputLexer.fsl"
+# 41 "MemoryLexer.fsl"
                                  PLUS 
-# 120 "InputLexer.fs"
+# 120 "MemoryLexer.fs"
           )
   | 13 -> ( 
-# 42 "InputLexer.fsl"
+# 42 "MemoryLexer.fsl"
                                  MINUS 
-# 125 "InputLexer.fs"
+# 125 "MemoryLexer.fs"
           )
   | 14 -> ( 
-# 43 "InputLexer.fsl"
+# 43 "MemoryLexer.fsl"
                                  ZERO 
-# 130 "InputLexer.fs"
+# 130 "MemoryLexer.fs"
           )
   | _ -> failwith "tokenize"
 
-# 3000000 "InputLexer.fs"
+# 3000000 "MemoryLexer.fs"

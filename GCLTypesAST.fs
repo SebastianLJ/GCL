@@ -1,6 +1,6 @@
 // This file implements a module where we define a data type "expr"
 // to store represent arithmetic expressions
-module CalculatorTypesAST
+module GCLTypesAST
 open System
 
 
@@ -45,7 +45,7 @@ type Action = VAsgn of String * a
   | DoExpr of (GC)
   | Skip
 
-type Sign = Nsign | Zsign| Psign
+type Sign = Neg | Zero | Pos
 (* type Signa =
   | Sign
   | Num of int
