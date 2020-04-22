@@ -3,6 +3,12 @@ module InputParser
 type token = 
   | EOF
   | WHITESPACE
+  | LCBRACK
+  | RCBRACK
+  | ZERO
+  | PLUS
+  | MINUS
+  | SIGN of (char)
   | ASSIGN
   | LBRACK
   | RBRACK
@@ -13,6 +19,12 @@ type token =
 type tokenId = 
     | TOKEN_EOF
     | TOKEN_WHITESPACE
+    | TOKEN_LCBRACK
+    | TOKEN_RCBRACK
+    | TOKEN_ZERO
+    | TOKEN_PLUS
+    | TOKEN_MINUS
+    | TOKEN_SIGN
     | TOKEN_ASSIGN
     | TOKEN_LBRACK
     | TOKEN_RBRACK
@@ -27,6 +39,8 @@ type nonTerminalId =
     | NONTERM_start
     | NONTERM_iExpr
     | NONTERM_arrElem
+    | NONTERM_signExpr
+    | NONTERM_signArrElem
 /// This function maps tokens to integer indexes
 val tagOfToken: token -> int
 
@@ -38,4 +52,4 @@ val prodIdxToNonTerminal: int -> nonTerminalId
 
 /// This function gets the name of a token as a string
 val token_to_string: token -> string
-val start : (FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> FSharp.Text.Lexing.LexBuffer<'cty> -> (init) 
+val start : (FSharp.Text.Lexing.LexBuffer<'cty> -> token) -> FSharp.Text.Lexing.LexBuffer<'cty> -> (signInit) 

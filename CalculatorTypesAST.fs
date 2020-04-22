@@ -44,3 +44,31 @@ type Action = VAsgn of String * a
   | IfExpr of (GC)
   | DoExpr of (GC)
   | Skip
+
+type Sign = Nsign | Zsign| Psign
+(* type Signa =
+  | Sign
+  | Num of int
+  | Var of string
+  | Array of (char*Signa)
+  | PlusExpr of (Signa * Signa)
+  | MinusExpr of (Signa * Signa)
+  | TimesExpr of (Signa * Signa)
+  | DivExpr of (Signa * Signa)
+  | UMinusExpr of (Signa)
+  | PowExpr of (Signa * Signa)
+
+ type Signb =
+  | True
+  | False
+  | AndExpr of (Signb * Signb)
+  | OrExpr of (Signb * Signb)
+  | AndHardExpr of (Signb * Signb)
+  | OrHardExpr of (Signb * Signb)
+  | NotExpr of (Signb)
+  | EqualExpr of (Signa * Signa)
+  | NEqualExpr of (Signa * Signa)
+  | GtExpr of (Signa * Signa)
+  | GteExpr of (Signa * Signa)
+  | LtExpr of (Signa * Signa)
+  | LteExpr of (Signa * Signa)*)

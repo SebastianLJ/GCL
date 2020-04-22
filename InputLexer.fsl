@@ -13,6 +13,8 @@ let num         = digit+
 let array       = ['A'-'Z']
 let x           = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z'] | "\d_")*
 let whitespace  = [' ' '\n' '\r' '\t']
+//Move below into separate file:
+let sign        = ['0' '-' '+']
 
 
 // We define now the rules for recognising and building tokens
@@ -23,6 +25,7 @@ rule tokenize = parse
 // deal with tokens that need to be ignored (skip them)
 
 // deal with tokens that need to be built
+//Move below into separate file
 | whitespace    { tokenize lexbuf }
 | num           { NUM(int (LexBuffer<_>.LexemeString lexbuf)) }
 | array         { ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
@@ -32,3 +35,9 @@ rule tokenize = parse
 | '['           { LBRACK }
 | ']'           { RBRACK }
 | eof           { EOF }
+| '{'           { LCBRACK }
+| '}'           { RCBRACK }
+| sign          { SIGN (Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| '+'           { PLUS }
+| '-'           { MINUS }
+| '0'           { ZERO }

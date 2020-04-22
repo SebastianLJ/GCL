@@ -10,6 +10,9 @@ open InputTypesAST
 %token SEPARATOR
 %token LBRACK RBRACK 
 %token ASSIGN
+%token <char> SIGN
+%token ZERO PLUS MINUS 
+%token LCBRACK RCBRACK
 %token EOF WHITESPACE
 // NOTE: the actual formats of these tokens are defined in the lexer file
 //       as regular expressions
@@ -23,9 +26,11 @@ open InputTypesAST
 %start start
 
 // We specify the return type of each of then non-terminal symbols
-%type <init> start
+%type <signInit> start
 %type <init> iExpr
 %type <arr> arrElem
+%type <signInit> signExpr
+%type <signArr> signArrElem
 
 // Grammar productions
 %%
@@ -33,7 +38,7 @@ open InputTypesAST
 // The first production in "formal" notation is
 // start -> expression
 // here written:
-start: iExpr EOF             { $1 }
+start: signExpr EOF             { $1 }
 
 // Note that we need to insert an End-Of-File (EOF)
 // The code annotation { $1 } specifies that parsing with this production
@@ -44,13 +49,22 @@ start: iExpr EOF             { $1 }
 // written in the yacc format:
 
 iExpr:
-  | VAR ASSIGN NUM                           { VarInit($1, $3) }
-  | ARRAY ASSIGN LBRACK arrElem RBRACK       { ArrInit($1, $4) }
-  | iExpr SEPARATOR iExpr                    { SeqInit($1, $3) }
+  | VAR ASSIGN NUM                           { VarInit($1, $3)           }
+  | ARRAY ASSIGN LBRACK arrElem RBRACK       { ArrInit($1, $4)           }
+  | iExpr SEPARATOR iExpr                    { SeqInit($1, $3)           }
 arrElem:
   | NUM                                      { NumElem($1)     }
   | NUM SEPARATOR arrElem                    { Elems($1, $3)   }
+signExpr:
+  | VAR ASSIGN SIGN                      { SignVarInit($1, $3)       }
+  | ARRAY ASSIGN LCBRACK signArrElem RCBRACK     { SignArrInit($1, $4)       }
+signArrElem:  
+  | SIGN                                     { SignElem($1)         }
+  | SIGN SEPARATOR signArrElem           { SignArrElems($1, $3)  }
 
+//  | PLUS                                       { Sign($1)                  }
+ // | MINUS                                      { Sign($1)                  }
+ // | ZERO                                       { Sign($1)                  }
 // Again, the code annotation specifies the result of parsing
 // For example { TimesExpr($1,$3) } specifies that parsing with the production
 // returns the value TimesExpr($1,$3), where $i is the result of parsing

@@ -13,3 +13,12 @@ type init =
 type mapInit =
   | VarElem of string
   | ArrElem of string*int
+
+//Move below into separate file
+type signArr =
+  | SignElem of char
+  | SignArrElems of char * signArr
+type signInit =
+  | SignVarInit of string * char
+  | SignArrInit of char * signArr
+  | Sign of char

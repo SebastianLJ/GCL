@@ -1,5 +1,6 @@
 open System
 open System.Collections.Generic
+open Microsoft.FSharp.Collections
 
 // This script implements GCL
 
@@ -343,25 +344,6 @@ let graphVizify pg = "digraph program_graph {rankdir=LR;\nnode [shape = circle];
 
 let stripString (stripChars:string) (text:string) =
     text.Split(stripChars.ToCharArray(), StringSplitOptions.RemoveEmptyEntries) |> String.Concat
-//let rec makeMemoryFromUserInput memInput = let strippedString = stripString " " memInput
-(*let rec getInitialMemory e = printfn "Enter initial memory (FORMAT: x = 1, y = 42, A = [1, 2, 4, 6], ...) "
-                             let memInput = Console.ReadLine()
-                             try
-                                 let memory = makeMemoryFromUserInput memInput
-                                 printfn "Initial memory: %A" memory
-                                 printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory))
-                             with err -> printfn "%s" (err.Message)
-                                         getInitialMemory e
-*)
-
-(*
-let initializeVar varName varValue mem = updateVar varName varValue (mem)
-*)
-
-(*let rec initializeArr xs arrName arrMem =
-    match (xs) with
-    | ([]) -> arrMem
-    |(value::xs) -> (arrName, value :: initializeArr xs arrName xs arrName (updateArr arrName index value arrMem)*)
 
 let rec setupArrAsList = function
      | NumElem x -> [x]
@@ -373,6 +355,266 @@ let rec initializeMemory mem = function
     | SeqInit (e1, e2) -> initializeMemory (initializeMemory mem e1) e2
 
 
+
+let signAdd x y =
+    match(x,y) with
+    |(Psign, Psign) -> Set.empty.Add(Psign)
+    |(Psign, Nsign)-> Set.empty.Add(Psign).Add(Nsign).Add(Zsign)
+    |(Nsign, Psign) -> Set.empty.Add(Psign).Add(Nsign).Add(Zsign)
+    |(Nsign, Nsign) -> Set.empty.Add(Nsign)
+    |(Zsign, Psign) -> Set.empty.Add(Psign)
+    |(Psign, Zsign) -> Set.empty.Add(Psign)
+    |(Zsign, Nsign) -> Set.empty.Add(Nsign)
+    |(Nsign, Zsign) -> Set.empty.Add(Nsign)
+    |(Zsign, Zsign) -> Set.empty.Add(Zsign)
+
+let signSub x y =
+        match (x, y) with
+        |(Psign, Psign) -> Set.empty.Add(Psign).Add(Nsign).Add(Zsign)
+        |(Psign, Nsign)  -> Set.empty.Add(Psign)
+        |(Nsign, Psign)  -> Set.empty.Add(Nsign)
+        |(Nsign, Nsign)  -> Set.empty.Add(Nsign).Add(Psign).Add(Zsign)
+        |(Zsign, Psign)  -> Set.empty.Add(Nsign)
+        |(Psign, Zsign)  -> Set.empty.Add(Psign)
+        |(Zsign, Nsign)  -> Set.empty.Add(Psign)
+        |(Nsign, Zsign) -> Set.empty.Add(Nsign)
+        |(Zsign, Zsign)  -> Set.empty.Add(Zsign)
+let signMul x y =
+        match (x, y) with
+        |(Psign, Nsign) -> Set.empty.Add(Nsign)
+        |(Nsign, Psign) -> Set.empty.Add(Nsign)
+        |(Zsign, _) -> Set.empty.Add(Zsign)
+        |(_, Zsign) -> Set.empty.Add(Zsign)
+        |(Psign, Psign) -> Set.empty.Add(Psign)
+        |(Nsign, Nsign)  -> Set.empty.Add(Psign)
+
+let signDiv x y =   
+        match (x, y) with
+        |(Psign, Nsign)  -> Set.empty.Add(Nsign)
+        |(Nsign, Psign) -> Set.empty.Add(Nsign)
+        |(Zsign, _) -> Set.empty.Add(Zsign)
+        |(_, Zsign) -> Set.empty
+        |(Psign, Psign) -> Set.empty.Add(Psign)
+        |(Nsign, Nsign) -> Set.empty.Add(Psign)
+let signPow x y =
+        match (x, y) with
+        |(Psign, Psign) -> Set.empty.Add(Psign)
+        |(Psign, Nsign)  -> Set.empty.Add(Psign)
+        |(Nsign, Psign)  -> Set.empty.Add(Nsign).Add(Psign)
+        |(_, Zsign)  -> Set.empty.Add(Psign)
+        |(Zsign, Nsign) -> Set.empty
+        |(Zsign, Psign)  -> Set.empty.Add(Zsign)
+        |(Nsign, Nsign)  -> Set.empty.Add(Psign).Add(Nsign)
+let signUMin x =
+      match x with
+        |Psign  -> Set.empty.Add(Nsign) 
+        |Nsign -> Set.empty.Add(Psign)
+        |Zsign -> Set.empty.Add(Zsign)
+
+let sign x = if x=0 then Zsign elif x>0 then Psign else Nsign
+let rec AsignOpp = function 
+    |Num(x) -> Set.empty.Add (sign x)
+    |PlusExpr(x,y) ->
+        let k = Set.empty
+        for i in ( AsignOpp x) do
+           for j in (AsignOpp y) do
+           k = Set.union (signAdd i j) k
+        k
+    |MinusExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+           for j in (AsignOpp y) do
+           k = Set.union (signSub i j) k
+        k
+   
+    |TimesExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+           for j in (AsignOpp y) do
+           k = Set.union (signMul i j) k
+        k
+     
+    |DivExpr(x,y) ->
+        let k = Set.empty
+        for i in ( AsignOpp x) do
+           for j in (AsignOpp y) do
+           k = Set.union (signDiv i j) k
+        k
+     
+    |UMinusExpr x ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+           k = Set.union (signUMin i) k
+        k
+       
+    |PowExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+           for j in (AsignOpp y) do
+           k = Set.union (signPow i j) k
+        k
+
+let BsignAnd x y =
+        match(x,y) with
+        |(true, true) -> Set.empty.Add(true)
+        |(true, false) -> Set.empty.Add(false)
+        |(false, true) -> Set.empty.Add(false)
+        |(false,false) -> Set.empty.Add(false)
+let BsignOr x y =
+         match(x,y) with
+        |(true, true) -> Set.empty.Add(true)
+        |(true, false) -> Set.empty.Add(true)
+        |(false, true) -> Set.empty.Add(true)
+        |(false, false) -> Set.empty.Add(true)
+let BsignAndH x y =
+        match(x,y) with
+        |(false, _) -> Set.empty.Add(false)
+        |(true, false) -> Set.empty.Add(false)
+        |_ -> Set.empty.Add(true)
+let BsignOrH x y = 
+        match(x,y) with
+        |(true,_) -> Set.empty.Add(true)
+        |(false, true) -> Set.empty.Add(true)
+        |_ -> Set.empty.Add(false)
+let BsignNot x =
+        match x with
+        |true -> Set.empty.Add(false)
+        |false -> Set.empty.Add(true)
+let BsignEqual x y =
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(false)
+        |(Psign, Zsign) -> Set.empty.Add(false)
+        |(Nsign, Psign) -> Set.empty.Add(false)
+        |(Zsign, Psign) -> Set.empty.Add(false)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(false)
+        |(Zsign, Nsign) -> Set.empty.Add(false)
+        |(Zsign, Zsign) -> Set.empty.Add(true)
+let BsignNEqual x y =
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(true)
+        |(Psign, Zsign) -> Set.empty.Add(true)
+        |(Nsign, Psign) -> Set.empty.Add(true)
+        |(Zsign, Psign) -> Set.empty.Add(true)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(true)
+        |(Zsign, Nsign) -> Set.empty.Add(true)
+        |(Zsign, Zsign) -> Set.empty.Add(false)
+let BsignGt x y = 
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(true)
+        |(Psign, Zsign) -> Set.empty.Add(true)
+        |(Nsign, Psign) -> Set.empty.Add(false)
+        |(Zsign, Psign) -> Set.empty.Add(false)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(false)
+        |(Zsign, Nsign) -> Set.empty.Add(true)
+        |(Zsign, Zsign) -> Set.empty.Add(false)
+let BsignGte x y = 
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(true)
+        |(Psign, Zsign) -> Set.empty.Add(true)
+        |(Nsign, Psign) -> Set.empty.Add(false)
+        |(Zsign, Psign) -> Set.empty.Add(false)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(false)
+        |(Zsign, Nsign) -> Set.empty.Add(true)
+        |(Zsign, Zsign) -> Set.empty.Add(true)
+let BsignLt x y =
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(false)
+        |(Psign, Zsign) -> Set.empty.Add(false)
+        |(Nsign, Psign) -> Set.empty.Add(true)
+        |(Zsign, Psign) -> Set.empty.Add(true)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(true)
+        |(Zsign, Nsign) -> Set.empty.Add(false)
+        |(Zsign, Zsign) -> Set.empty.Add(false)
+let BsignLte x y =
+        match(x,y) with
+        |(Psign, Psign) -> Set.empty.Add(true).Add(false)
+        |(Psign, Nsign) -> Set.empty.Add(false)
+        |(Psign, Zsign) -> Set.empty.Add(false)
+        |(Nsign, Psign) -> Set.empty.Add(true)
+        |(Zsign, Psign) -> Set.empty.Add(true)
+        |(Nsign, Nsign) -> Set.empty.Add(true).Add(false)
+        |(Nsign, Zsign) -> Set.empty.Add(true)
+        |(Zsign, Nsign) -> Set.empty.Add(false)
+        |(Zsign, Zsign) -> Set.empty.Add(true)
+let rec BsignOpp = function
+    |True -> Set.empty.Add(true)
+    |False -> Set.empty.Add(false)
+    |AndExpr(x,y) ->
+        let k = Set.empty
+        for i in (BsignOpp x) do
+            for j in (BsignOpp y) do
+                k = Set.union (BsignAnd i j) k
+        k
+        
+    |OrExpr(x,y) ->
+        let k = Set.empty
+        for i in (BsignOpp x) do
+            for j in (BsignOpp y) do
+                k = Set.union (BsignOr i j) k
+        k
+    |AndHardExpr(x,y) ->
+        let k = Set.empty
+        for i in (BsignOpp x) do
+            for j in (BsignOpp y) do
+                k = Set.union (BsignAndH i j) k
+        k
+    |OrHardExpr(x,y) ->
+        let k = Set.empty
+        for i in (BsignOpp x) do
+            for j in (BsignOpp y) do
+                k = Set.union (BsignOrH i j) k
+        k
+    |NotExpr(x) ->
+        let k = Set.empty
+        for i in (BsignOpp x) do
+                k = Set.union (BsignNot i) k
+        k
+    |EqualExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignEqual i j) k
+        k
+    |NEqualExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignNEqual i j) k
+        k
+    |GtExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignGt i j) k
+        k
+    |GteExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignGte i j) k
+        k
+    |LtExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignLt i j) k
+        k
+    |LteExpr(x,y) ->
+        let k = Set.empty
+        for i in (AsignOpp x) do
+            for j in (AsignOpp y) do
+                k = Set.union (BsignLte i j) k
+        k
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
