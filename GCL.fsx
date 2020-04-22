@@ -637,10 +637,12 @@ let rec getUserInputDOrNd e =
 let rec getUserInputChooseEnvironment choice =
     printfn "Choose environment.\nEnter 1 for Step-wise Execution\nEnter 2 for Detection of Signs Analysis\nEnter 3 for Security Analysis"
     let choice = Console.ReadLine()
+    try
     if int choice > 3 then
         getUserInputChooseEnvironment choice
     else
         int choice
+    with _ -> getUserInputChooseEnvironment choice
 
 
 let parseInitMem input =
@@ -673,7 +675,7 @@ let rec guardedCommandLanguageRunner n =
             
             if environmentMode = 1 then
                 try
-                Console.WriteLine("Write the initial memory: ")
+                Console.WriteLine("Write the initial memory (Press Enter to generate initial memory automatically): ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
                 let memory2 = initializeConcreteMemory k
@@ -682,8 +684,13 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
-                Console.WriteLine("Write the abstract memory: ")
-                // Parse abstract memory
+                Console.WriteLine("Write the abstract memory (Press Enter to generate abstract memory automatically): ")
+                // TODO Implement
+                with err -> printfn "%s" (err.Message)
+            elif environmentMode = 3 then
+                try
+                Console.WriteLine("Specify Security Lattice (Press Enter to generate Security Lattice automatically): ")
+                // TODO Implement
                 with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
 
