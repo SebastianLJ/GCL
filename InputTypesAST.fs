@@ -10,9 +10,6 @@ type init =
   | ArrInit of char * arr
   | SeqInit of init * init
 
-type mapInit =
-  | VarElem of string
-  | ArrElem of string*int
 
 //Move below into separate file
 type signArr =

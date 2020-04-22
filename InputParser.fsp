@@ -38,7 +38,7 @@ open InputTypesAST
 // The first production in "formal" notation is
 // start -> expression
 // here written:
-start: signExpr EOF             { $1 }
+start: iExpr EOF             { $1 }
 
 // Note that we need to insert an End-Of-File (EOF)
 // The code annotation { $1 } specifies that parsing with this production
@@ -52,6 +52,7 @@ iExpr:
   | VAR ASSIGN NUM                           { VarInit($1, $3)           }
   | ARRAY ASSIGN LBRACK arrElem RBRACK       { ArrInit($1, $4)           }
   | iExpr SEPARATOR iExpr                    { SeqInit($1, $3)           }
+  | signExpr
 arrElem:
   | NUM                                      { NumElem($1)     }
   | NUM SEPARATOR arrElem                    { Elems($1, $3)   }
