@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCLTypesAST.fs"
@@ -634,6 +634,15 @@ let rec getUserInputDOrNd e =
         printfn "DPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
     else getUserInputDOrNd e
 
+let rec getUserInputChooseEnvironment choice =
+    printfn "Choose environment.\nEnter 1 for Step-wise Execution\nEnter 2 for Detection of Signs Analysis\nEnter 3 for Security Analysis"
+    let choice = Console.ReadLine()
+    if int choice > 3 then
+        getUserInputChooseEnvironment choice
+    else
+        int choice
+
+
 let parseInitMem input =
     // translate string into a buffer of characters
     let lexbuf = LexBuffer<char>.FromString input
@@ -659,18 +668,23 @@ let rec guardedCommandLanguageRunner n =
             let e = parse input
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
             getUserInputDOrNd e
-            try
+            
+            let environmentMode = getUserInputChooseEnvironment ""
+            
+            if environmentMode = 1 then
+                try
                 Console.WriteLine("Write the initial memory: ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
                 let memory2 = initializeConcreteMemory k
- (*
-                let memory = ([("i",0); ("j", 0); ("n",0); ("t",0)], [('A', [3;9;5;7;8]);('B',[-3;0])])
-*)
                 printfn "Initial memory: %A" memory2
                 printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
-            with err -> printfn "%s" (err.Message)
-                        //getInitialMemory e
+                with err -> printfn "%s" (err.Message)
+            elif environmentMode = 2 then
+                try
+                Console.WriteLine("Write the abstract memory: ")
+                // Parse abstract memory
+                with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
 
         guardedCommandLanguageRunner n
