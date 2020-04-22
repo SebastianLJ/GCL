@@ -1,0 +1,5 @@
+fslex.exe GCLLexer.fsl --unicode
+fsyacc.exe GCLParser.fsp --module GCLParser
+fslex.exe MemoryLexer.fsl --unicode
+fsyacc.exe MemoryParser.fsp --module MemoryParser
+fsi.exe Calculator.fsx
