@@ -678,6 +678,7 @@ let rec guardedCommandLanguageRunner n =
                 Console.WriteLine("Enter the initial memory: ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
+                printf "k: %A" k
                 let memory2 = initializeConcreteMemory k
                 printfn "Initial memory: %A" memory2
                 printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
