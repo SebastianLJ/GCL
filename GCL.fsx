@@ -357,7 +357,7 @@ let parse input =
     res
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
-    printf "Enter a program in the Guarded Commands Language: "
+    printf "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
     let input = Console.ReadLine()
     if (input = "exit") then printfn "Exiting Guarded Command Language"
     else
@@ -380,7 +380,10 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
-                Console.WriteLine("Enter the initial abstract memory: ")
+                Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
+                let initialMem = Console.ReadLine()
+                let k = parseInitMem initialMem
+                printf "k: %A" k
                 // TODO Implement
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then

@@ -17,7 +17,7 @@ type token =
   | ZERO
   | PLUS
   | MINUS
-  | SIGN of (char)
+  | SIGN of (string)
   | ASSIGN
   | LBRACK
   | RBRACK
@@ -269,7 +269,7 @@ let _fsyacc_reductions ()  =    [|
 # 269 "MemoryParser.fs"
         (fun (parseState : FSharp.Text.Parsing.IParseState) ->
             let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : string)) in
-            let _3 = (let data = parseState.GetInput(3) in (Microsoft.FSharp.Core.Operators.unbox data : char)) in
+            let _3 = (let data = parseState.GetInput(3) in (Microsoft.FSharp.Core.Operators.unbox data : string)) in
             Microsoft.FSharp.Core.Operators.box
                 (
                    (
@@ -304,7 +304,7 @@ let _fsyacc_reductions ()  =    [|
                  : AbsElement));
 # 305 "MemoryParser.fs"
         (fun (parseState : FSharp.Text.Parsing.IParseState) ->
-            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : char)) in
+            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : string)) in
             Microsoft.FSharp.Core.Operators.box
                 (
                    (
@@ -315,7 +315,7 @@ let _fsyacc_reductions ()  =    [|
                  : AbsArrContent));
 # 316 "MemoryParser.fs"
         (fun (parseState : FSharp.Text.Parsing.IParseState) ->
-            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : char)) in
+            let _1 = (let data = parseState.GetInput(1) in (Microsoft.FSharp.Core.Operators.unbox data : string)) in
             let _3 = (let data = parseState.GetInput(3) in (Microsoft.FSharp.Core.Operators.unbox data : AbsArrContent)) in
             Microsoft.FSharp.Core.Operators.box
                 (

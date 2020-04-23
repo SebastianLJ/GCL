@@ -8,7 +8,7 @@ type token =
   | ZERO
   | PLUS
   | MINUS
-  | SIGN of (char)
+  | SIGN of (string)
   | ASSIGN
   | LBRACK
   | RBRACK
