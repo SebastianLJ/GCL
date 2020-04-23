@@ -675,7 +675,7 @@ let rec guardedCommandLanguageRunner n =
             
             if environmentMode = 1 then
                 try
-                Console.WriteLine("Write the initial memory (Press Enter to generate initial memory automatically): ")
+                Console.WriteLine("Enter the initial memory: ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
                 let memory2 = initializeConcreteMemory k
@@ -684,12 +684,12 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
-                Console.WriteLine("Write the abstract memory (Press Enter to generate abstract memory automatically): ")
+                Console.WriteLine("Enter the initial abstract memory: ")
                 // TODO Implement
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
-                Console.WriteLine("Specify Security Lattice (Press Enter to generate Security Lattice automatically): ")
+                Console.WriteLine("Specify Security Lattice: ")
                 // TODO Implement
                 with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
