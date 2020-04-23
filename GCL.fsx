@@ -8,15 +8,15 @@ open Microsoft.FSharp.Collections
 #r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
-#load "GCLTypesAST.fs"
+#load "GCL/GCLTypesAST.fs"
 
 open GCLTypesAST
 
-#load "GCLParser.fs"
+#load "GCL/GCLParser.fs"
 
 open GCLParser
 
-#load "GCLLexer.fs"
+#load "GCL/GCLLexer.fs"
 
 open GCLLexer
 
@@ -31,6 +31,9 @@ open MemoryParser
 #load "MemoryLexer.fs"
 
 open MemoryLexer
+
+#load "Testing.fs"
+
 
 
 
@@ -154,7 +157,6 @@ let rec BEval bExp mem =
         match (AEval x mem, AEval y mem) with
         | (Some x, Some y) -> Some(x <= y)
         | _ -> None
-
 
 type mem = (string * int) list * (char * int list) list
 let isVarInDomain var memory = match List.exists (fun (v, _) -> v = var) (fst memory) with
@@ -370,259 +372,180 @@ let signAdd x y =
     | (Zero, Zero) -> Set.empty.Add(Zero)
 
 let signSub x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(Pos).Add(Neg).Add(Zero)
-        | (Pos, Neg) -> Set.empty.Add(Pos)
-        | (Neg, Pos) -> Set.empty.Add(Neg)
-        | (Neg, Neg) -> Set.empty.Add(Neg).Add(Pos).Add(Zero)
-        | (Zero, Pos) -> Set.empty.Add(Neg)
-        | (Pos, Zero) -> Set.empty.Add(Pos)
-        | (Zero, Neg) -> Set.empty.Add(Pos)
-        | (Neg, Zero) -> Set.empty.Add(Neg)
-        | (Zero, Zero) -> Set.empty.Add(Zero)
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(Pos).Add(Neg).Add(Zero)
+    | (Pos, Neg) -> Set.empty.Add(Pos)
+    | (Neg, Pos) -> Set.empty.Add(Neg)
+    | (Neg, Neg) -> Set.empty.Add(Neg).Add(Pos).Add(Zero)
+    | (Zero, Pos) -> Set.empty.Add(Neg)
+    | (Pos, Zero) -> Set.empty.Add(Pos)
+    | (Zero, Neg) -> Set.empty.Add(Pos)
+    | (Neg, Zero) -> Set.empty.Add(Neg)
+    | (Zero, Zero) -> Set.empty.Add(Zero)
 let signMul x y =
-        match (x, y) with
-        | (Pos, Neg) -> Set.empty.Add(Neg)
-        | (Neg, Pos) -> Set.empty.Add(Neg)
-        | (Zero, _) -> Set.empty.Add(Zero)
-        | (_, Zero) -> Set.empty.Add(Zero)
-        | (Pos, Pos) -> Set.empty.Add(Pos)
-        | (Neg, Neg) -> Set.empty.Add(Pos)
+    match (x, y) with
+    | (Pos, Neg) -> Set.empty.Add(Neg)
+    | (Neg, Pos) -> Set.empty.Add(Neg)
+    | (Zero, _) -> Set.empty.Add(Zero)
+    | (_, Zero) -> Set.empty.Add(Zero)
+    | (Pos, Pos) -> Set.empty.Add(Pos)
+    | (Neg, Neg) -> Set.empty.Add(Pos)
 
 let signDiv x y =
-        match (x, y) with
-        | (Pos, Neg) -> Set.empty.Add(Neg)
-        | (Neg, Pos) -> Set.empty.Add(Neg)
-        | (Zero, _) -> Set.empty.Add(Zero)
-        | (_, Zero) -> Set.empty
-        | (Pos, Pos) -> Set.empty.Add(Pos)
-        | (Neg, Neg) -> Set.empty.Add(Pos)
+    match (x, y) with
+    | (Pos, Neg) -> Set.empty.Add(Neg)
+    | (Neg, Pos) -> Set.empty.Add(Neg)
+    | (Zero, _) -> Set.empty.Add(Zero)
+    | (_, Zero) -> Set.empty
+    | (Pos, Pos) -> Set.empty.Add(Pos)
+    | (Neg, Neg) -> Set.empty.Add(Pos)
 let signPow x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(Pos)
-        | (Pos, Neg) -> Set.empty.Add(Pos)
-        | (Neg, Pos) -> Set.empty.Add(Neg).Add(Pos)
-        | (_, Zero) -> Set.empty.Add(Pos)
-        | (Zero, Neg) -> Set.empty
-        | (Zero, Pos) -> Set.empty.Add(Zero)
-        | (Neg, Neg) -> Set.empty.Add(Pos).Add(Neg)
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(Pos)
+    | (Pos, Neg) -> Set.empty.Add(Pos)
+    | (Neg, Pos) -> Set.empty.Add(Neg).Add(Pos)
+    | (_, Zero) -> Set.empty.Add(Pos)
+    | (Zero, Neg) -> Set.empty
+    | (Zero, Pos) -> Set.empty.Add(Zero)
+    | (Neg, Neg) -> Set.empty.Add(Pos).Add(Neg)
 let signUMin x =
-      match x with
-        | Pos -> Set.empty.Add(Neg)
-        | Neg -> Set.empty.Add(Pos)
-        | Zero -> Set.empty.Add(Zero)
+    match x with
+    | Pos -> Set.empty.Add(Neg)
+    | Neg -> Set.empty.Add(Pos)
+    | Zero -> Set.empty.Add(Zero)
+
+let rec opHat set1 set2 acc opBarBin opBarUn =
+    match Set.toList set2 with
+    | [] -> match Set.toList set1 with
+            | [] -> acc
+            | x :: xs -> opHat (Set.ofList xs) set2 (Set.union (opBarUn x) acc) opBarBin opBarUn
+    | _ -> match Set.toList set1 with
+           | [] -> acc
+           | x::xs -> opHat (Set.ofList xs) set2 (Set.union (Set.fold (fun acc y -> Set.union (opBarBin x y) acc) Set.empty set2) acc) opBarBin opBarUn
 
 let sign x = if x = 0 then Zero elif x > 0 then Pos else Neg
 
-let rec AsignOpp aExp mem  =
-    match(aExp, mem) with
-    | (Num(x),_) -> Set.empty.Add (sign x)
-    | (Var(x),(xs,_)) -> Set.empty.Add(try (snd (List.find (fun (id, _) -> id = x) xs)) with err -> failwith ("The variable " + x + " might not have been initialized"))
-    | (Array(c,a),(_,ys)) -> let index = AsignOpp a mem
-                             if (not (Set.intersect index (set [Zero; Pos])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) ys)) else Set.empty
-    | (PlusExpr(x,y),_) ->
-        let mutable k = Set.empty
-        for i in (AsignOpp x mem) do
-           for j in (AsignOpp y mem) do
-           k <- Set.union (signAdd i j) k
-           printfn "k: %A" k
-        k
-    |(MinusExpr(x,y),_) ->
-        let mutable k = Set.empty
-        for i in (AsignOpp x mem) do
-           for j in (AsignOpp y mem) do
-           k <- Set.union (signSub i j) k
-        k
-   
-    |(TimesExpr(x,y),_) ->
-        let mutable k = Set.empty
-        for i in (AsignOpp x mem) do
-           for j in (AsignOpp y mem) do
-           k <- Set.union (signMul i j) k
-        k
-     
-    |(DivExpr(x,y),_) ->
-        let mutable k = Set.empty
-        for i in ( AsignOpp x mem) do
-           for j in (AsignOpp y mem) do
-           k <- Set.union (signDiv i j) k
-        k
-     
-    |(UMinusExpr x,_) ->
-        let mutable k = Set.empty
-        for i in (AsignOpp x mem) do
-           k <- Set.union (signUMin i) k
-        k
-       
-    |(PowExpr(x,y),_) ->
-        let mutable k = Set.empty
-        for i in (AsignOpp x mem) do
-           for j in (AsignOpp y mem) do
-           k <- Set.union (signPow i j) k
-        k
+let rec ASignEval aExp absMem  =
+    match aExp with
+    | Num x -> Set.empty.Add (sign x)
+    | Var x -> Set.empty.Add(try (snd (List.find (fun (id, _) -> id = x) (fst absMem) )) with err -> failwith ("The variable " + x + " might not have been initialized"))
+    | Array(c,a) -> let index = ASignEval a absMem
+                    if (not (Set.intersect index (set [Zero; Pos])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) (snd absMem) )) else Set.empty
+    | PlusExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signAdd (fun _ -> Set.empty)
+    | MinusExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signSub (fun _ -> Set.empty)
+    | TimesExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signMul (fun _ -> Set.empty)
+    | DivExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signDiv (fun _ -> Set.empty)
+    | UMinusExpr x -> opHat (ASignEval x absMem) Set.empty Set.empty (fun _ _ -> Set.empty) signUMin 
+    | PowExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signPow (fun _ -> Set.empty)
 
-let BsignAnd x y =
-        match (x, y) with
-        | (true, true) -> Set.empty.Add(true)
-        | (true, false) -> Set.empty.Add(false)
-        | (false, true) -> Set.empty.Add(false)
-        | (false, false) -> Set.empty.Add(false)
-let BsignOr x y =
-         match (x, y) with
-         | (true, true) -> Set.empty.Add(true)
-         | (true, false) -> Set.empty.Add(true)
-         | (false, true) -> Set.empty.Add(true)
-         | (false, false) -> Set.empty.Add(true)
-let BsignAndH x y =
-        match (x, y) with
-        | (false, _) -> Set.empty.Add(false)
-        | (true, false) -> Set.empty.Add(false)
-        | _ -> Set.empty.Add(true)
-let BsignOrH x y =
-        match (x, y) with
-        | (true, _) -> Set.empty.Add(true)
-        | (false, true) -> Set.empty.Add(true)
-        | _ -> Set.empty.Add(false)
-let BsignNot x =
-        match x with
-        | true -> Set.empty.Add(false)
-        | false -> Set.empty.Add(true)
-let BsignEqual x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(false)
-        | (Pos, Zero) -> Set.empty.Add(false)
-        | (Neg, Pos) -> Set.empty.Add(false)
-        | (Zero, Pos) -> Set.empty.Add(false)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(false)
-        | (Zero, Neg) -> Set.empty.Add(false)
-        | (Zero, Zero) -> Set.empty.Add(true)
-let BsignNEqual x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(true)
-        | (Pos, Zero) -> Set.empty.Add(true)
-        | (Neg, Pos) -> Set.empty.Add(true)
-        | (Zero, Pos) -> Set.empty.Add(true)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(true)
-        | (Zero, Neg) -> Set.empty.Add(true)
-        | (Zero, Zero) -> Set.empty.Add(false)
-let BsignGt x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(true)
-        | (Pos, Zero) -> Set.empty.Add(true)
-        | (Neg, Pos) -> Set.empty.Add(false)
-        | (Zero, Pos) -> Set.empty.Add(false)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(false)
-        | (Zero, Neg) -> Set.empty.Add(true)
-        | (Zero, Zero) -> Set.empty.Add(false)
-let BsignGte x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(true)
-        | (Pos, Zero) -> Set.empty.Add(true)
-        | (Neg, Pos) -> Set.empty.Add(false)
-        | (Zero, Pos) -> Set.empty.Add(false)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(false)
-        | (Zero, Neg) -> Set.empty.Add(true)
-        | (Zero, Zero) -> Set.empty.Add(true)
-let BsignLt x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(false)
-        | (Pos, Zero) -> Set.empty.Add(false)
-        | (Neg, Pos) -> Set.empty.Add(true)
-        | (Zero, Pos) -> Set.empty.Add(true)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(true)
-        | (Zero, Neg) -> Set.empty.Add(false)
-        | (Zero, Zero) -> Set.empty.Add(false)
-let BsignLte x y =
-        match (x, y) with
-        | (Pos, Pos) -> Set.empty.Add(true).Add(false)
-        | (Pos, Neg) -> Set.empty.Add(false)
-        | (Pos, Zero) -> Set.empty.Add(false)
-        | (Neg, Pos) -> Set.empty.Add(true)
-        | (Zero, Pos) -> Set.empty.Add(true)
-        | (Neg, Neg) -> Set.empty.Add(true).Add(false)
-        | (Neg, Zero) -> Set.empty.Add(true)
-        | (Zero, Neg) -> Set.empty.Add(false)
-        | (Zero, Zero) -> Set.empty.Add(true)
-let rec BsignOpp bExp mem = 
+let BSignAnd x y =
+    match (x, y) with
+    | (true, true) -> Set.empty.Add(true)
+    | (true, false) -> Set.empty.Add(false)
+    | (false, true) -> Set.empty.Add(false)
+    | (false, false) -> Set.empty.Add(false)
+let BSignOr x y =
+    match (x, y) with
+    | (true, true) -> Set.empty.Add(true)
+    | (true, false) -> Set.empty.Add(true)
+    | (false, true) -> Set.empty.Add(true)
+    | (false, false) -> Set.empty.Add(true)
+let BSignAndH x y =
+    match (x, y) with
+    | (false, _) -> Set.empty.Add(false)
+    | (true, false) -> Set.empty.Add(false)
+    | _ -> Set.empty.Add(true)
+let BSignOrH x y =
+    match (x, y) with
+    | (true, _) -> Set.empty.Add(true)
+    | (false, true) -> Set.empty.Add(true)
+    | _ -> Set.empty.Add(false)
+let BSignNot x =
+    match x with
+    | true -> Set.empty.Add(false)
+    | false -> Set.empty.Add(true)
+let BSignEqual x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(false)
+    | (Pos, Zero) -> Set.empty.Add(false)
+    | (Neg, Pos) -> Set.empty.Add(false)
+    | (Zero, Pos) -> Set.empty.Add(false)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(false)
+    | (Zero, Neg) -> Set.empty.Add(false)
+    | (Zero, Zero) -> Set.empty.Add(true)
+let BSignNEqual x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(true)
+    | (Pos, Zero) -> Set.empty.Add(true)
+    | (Neg, Pos) -> Set.empty.Add(true)
+    | (Zero, Pos) -> Set.empty.Add(true)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(true)
+    | (Zero, Neg) -> Set.empty.Add(true)
+    | (Zero, Zero) -> Set.empty.Add(false)
+let BSignGt x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(true)
+    | (Pos, Zero) -> Set.empty.Add(true)
+    | (Neg, Pos) -> Set.empty.Add(false)
+    | (Zero, Pos) -> Set.empty.Add(false)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(false)
+    | (Zero, Neg) -> Set.empty.Add(true)
+    | (Zero, Zero) -> Set.empty.Add(false)
+let BSignGte x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(true)
+    | (Pos, Zero) -> Set.empty.Add(true)
+    | (Neg, Pos) -> Set.empty.Add(false)
+    | (Zero, Pos) -> Set.empty.Add(false)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(false)
+    | (Zero, Neg) -> Set.empty.Add(true)
+    | (Zero, Zero) -> Set.empty.Add(true)
+let BSignLt x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(false)
+    | (Pos, Zero) -> Set.empty.Add(false)
+    | (Neg, Pos) -> Set.empty.Add(true)
+    | (Zero, Pos) -> Set.empty.Add(true)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(true)
+    | (Zero, Neg) -> Set.empty.Add(false)
+    | (Zero, Zero) -> Set.empty.Add(false)
+let BSignLte x y =
+    match (x, y) with
+    | (Pos, Pos) -> Set.empty.Add(true).Add(false)
+    | (Pos, Neg) -> Set.empty.Add(false)
+    | (Pos, Zero) -> Set.empty.Add(false)
+    | (Neg, Pos) -> Set.empty.Add(true)
+    | (Zero, Pos) -> Set.empty.Add(true)
+    | (Neg, Neg) -> Set.empty.Add(true).Add(false)
+    | (Neg, Zero) -> Set.empty.Add(true)
+    | (Zero, Neg) -> Set.empty.Add(false)
+    | (Zero, Zero) -> Set.empty.Add(true)
+let rec BSignOpp bExp mem = 
     match bExp with
     | True -> Set.empty.Add(true)
     | False -> Set.empty.Add(false)
-    | AndExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in BsignOpp x mem do
-            for j in BsignOpp y mem do
-                k <- Set.union (BsignAnd i j) k
-        k
-
-    | OrExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in BsignOpp x mem do
-            for j in BsignOpp y mem do
-                k <- Set.union (BsignOr i j) k
-        k
-    | AndHardExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in BsignOpp x mem do
-            for j in BsignOpp y mem do
-                k <- Set.union (BsignAndH i j) k
-        k
-    | OrHardExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in BsignOpp x mem do
-            for j in BsignOpp y mem do
-                k <- Set.union (BsignOrH i j) k
-        k
-    | NotExpr(x) ->
-        let mutable k = Set.empty
-        for i in BsignOpp x mem do
-                k <- Set.union (BsignNot i) k
-        k
-    | EqualExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignEqual i j) k
-        k
-    | NEqualExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignNEqual i j) k
-        k
-    | GtExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignGt i j) k
-        k
-    | GteExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignGte i j) k
-        k
-    | LtExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignLt i j) k
-        k
-    | LteExpr(x, y) ->
-        let mutable k = Set.empty
-        for i in AsignOpp x mem do
-            for j in AsignOpp y mem do
-                k <- Set.union (BsignLte i j) k
-        k
+    | AndExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignAnd (fun _ -> Set.empty)
+    | OrExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignOr (fun _ -> Set.empty)
+    | AndHardExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignAndH (fun _ -> Set.empty)
+    | OrHardExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignOrH (fun _ -> Set.empty)
+    | NotExpr(x) -> opHat (BSignOpp x mem) Set.empty Set.empty (fun _ _ -> Set.empty) BSignNot
+    | EqualExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignEqual (fun _ -> Set.empty)
+    | NEqualExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignNEqual (fun _ -> Set.empty)
+    | GtExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignGt (fun _ -> Set.empty)
+    | GteExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignGte (fun _ -> Set.empty)
+    | LtExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
+    | LteExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
+    
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
