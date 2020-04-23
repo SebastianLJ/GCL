@@ -168,18 +168,18 @@ let rec opHat set1 set2 acc opBarBin opBarUn =
 
 let sign x = if x = 0 then Zero elif x > 0 then Pos else Neg
 
-let rec ASignEval aExp absMem  =
+let rec ASignOpp aExp absMem  =
     match aExp with
     | Num x -> Set.empty.Add (sign x)
     | Var x -> Set.empty.Add(try (snd (List.find (fun (id, _) -> id = x) (fst absMem) )) with err -> failwith ("The variable " + x + " might not have been initialized"))
-    | Array(c,a) -> let index = ASignEval a absMem
+    | Array(c,a) -> let index = ASignOpp a absMem
                     if (not (Set.intersect index (set [Zero; Pos])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) (snd absMem) )) else Set.empty
-    | PlusExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signAdd (fun _ -> Set.empty)
-    | MinusExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signSub (fun _ -> Set.empty)
-    | TimesExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signMul (fun _ -> Set.empty)
-    | DivExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signDiv (fun _ -> Set.empty)
-    | UMinusExpr x -> opHat (ASignEval x absMem) Set.empty Set.empty (fun _ _ -> Set.empty) signUMin 
-    | PowExpr(x,y) -> opHat (ASignEval x absMem) (ASignEval y absMem) Set.empty signPow (fun _ -> Set.empty)
+    | PlusExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signAdd (fun _ -> Set.empty)
+    | MinusExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signSub (fun _ -> Set.empty)
+    | TimesExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signMul (fun _ -> Set.empty)
+    | DivExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signDiv (fun _ -> Set.empty)
+    | UMinusExpr x -> opHat (ASignOpp x absMem) Set.empty Set.empty (fun _ _ -> Set.empty) signUMin 
+    | PowExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signPow (fun _ -> Set.empty)
 
 let BSignAnd x y =
     match (x, y) with
@@ -283,14 +283,40 @@ let rec BSignOpp bExp mem =
     | AndHardExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignAndH (fun _ -> Set.empty)
     | OrHardExpr(x, y) -> opHat (BSignOpp x mem) (BSignOpp y mem) Set.empty BSignOrH (fun _ -> Set.empty)
     | NotExpr(x) -> opHat (BSignOpp x mem) Set.empty Set.empty (fun _ _ -> Set.empty) BSignNot
-    | EqualExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignEqual (fun _ -> Set.empty)
-    | NEqualExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignNEqual (fun _ -> Set.empty)
-    | GtExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignGt (fun _ -> Set.empty)
-    | GteExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignGte (fun _ -> Set.empty)
-    | LtExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
-    | LteExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
+    | EqualExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignEqual (fun _ -> Set.empty)
+    | NEqualExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignNEqual (fun _ -> Set.empty)
+    | GtExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignGt (fun _ -> Set.empty)
+    | GteExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignGte (fun _ -> Set.empty)
+    | LtExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignLte (fun _ -> Set.empty)
+    | LteExpr(x, y) -> opHat (ASignOpp x mem) (ASignOpp y mem) Set.empty BSignLte (fun _ -> Set.empty)
     
-let semHat action M = 
+let rec updateAbsVar var sign absMem =
+    (List.map (fun (absVar,value) -> if absVar = var then (absVar, sign) else (absVar,value)) (fst absMem), snd absMem)
+
+let rec updateAbsArr arr signs absMem =
+    (fst absMem, List.map (fun (absArr,absSigns) -> if absArr = arr then (absArr, signs) else (absArr,absSigns)) (snd absMem))
+
+let findArraySigns arr absMem =
+    let rec searchAbsArray arr absArr = match absArr with
+                                        | [] -> Set.empty
+                                        | (c, signs)::_ when c = arr -> signs
+                                        | _::cs -> searchAbsArray arr cs
+    searchAbsArray arr (snd absMem)
+    
+let semHat action M =
+    match action with
+    | Action.Skip -> M
+    | Test b -> Set.filter (fun absMem -> Set.contains true (BSignOpp b absMem)) M
+    | VAsgn(var, value) -> Set.fold (fun acc absMem -> let s = ASignOpp value absMem
+                                                       match s.IsEmpty with
+                                                       | true -> acc
+                                                       | false -> Set.fold (fun acc sign -> acc.Add(updateAbsVar var sign absMem)) acc s) Set.empty M
+    | AAsgn(c, i, a) -> Set.fold (fun acc absMem -> let signs = ASignOpp i absMem
+                                                    match (Set.intersect signs (Set.ofList [Zero; Pos])).IsEmpty with
+                                                    | true -> acc
+                                                    | false -> let s = findArraySigns c absMem
+                                                               Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
+                                                                   Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
    
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
