@@ -11,11 +11,11 @@ type ConElement =
   | ConSeq of ConElement * ConElement
 
 type AbsArrContent =
-  | Sign of char
-  | Signs of char * AbsArrContent
+  | Sign of string //x
+  | Signs of string * AbsArrContent //x
   
 type AbsElement =
-  | AbsVar of string * char
+  | AbsVar of string * string //x
   | AbsArr of char * AbsArrContent
   | AbsSeq of AbsElement * AbsElement
   

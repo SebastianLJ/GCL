@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCL/GCLTypesAST.fs"
@@ -290,7 +290,9 @@ let rec BSignOpp bExp mem =
     | LtExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
     | LteExpr(x, y) -> opHat (ASignEval x mem) (ASignEval y mem) Set.empty BSignLte (fun _ -> Set.empty)
     
+(*
 let semHat action M = 
+*)
    
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
@@ -331,7 +333,7 @@ let parse input =
     res
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
-    printf "Enter a program in the Guarded Commands Language: "
+    printf "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
     let input = Console.ReadLine()
     if (input = "exit") then printfn "Exiting Guarded Command Language"
     else
@@ -354,7 +356,10 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
-                Console.WriteLine("Enter the initial abstract memory: ")
+                Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
+                let initialMem = Console.ReadLine()
+                let k = parseInitMem initialMem
+                printf "k: %A" k
                 // TODO Implement
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then

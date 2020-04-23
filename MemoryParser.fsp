@@ -10,7 +10,7 @@ open MemoryTypesAST
 %token SEPARATOR
 %token LBRACK RBRACK 
 %token ASSIGN
-%token <char> SIGN
+%token <string> SIGN
 %token ZERO PLUS MINUS 
 %token LCBRACK RCBRACK
 %token EOF WHITESPACE
