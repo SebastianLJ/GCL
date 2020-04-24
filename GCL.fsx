@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCL/GCLTypesAST.fs"
@@ -48,7 +48,31 @@ let generateTerminalInformation (q, mem) =
     "status: " + if q = "qEnd" then "terminated\n" else "stuck\n"
     + "Node: " + q + "\n"
     + stringifyMem mem
-    
+
+(*
+let stringifyAbsMem mem =
+    List.fold (fun acc (var, value) -> acc + var + ": " +  value + "\n") "" (fst mem)
+    + List.fold (fun acc (arr, array) -> acc + string arr + ": " + (string) array ) "" (snd mem)
+let generateTerminalInformationAbs (q, mem) =
+    "status: " + if q = "qEnd" then "terminated\n" else "stuck\n"
+    + "Node: " + q + "\n"
+    + stringifyAbsMem mem
+let rec setupAbsArrAsSet = function
+     | Sign x -> Set.empty.Add(x)
+     | Signs(x, y) -> Set.union (Set.empty.Add(x)) (setupAbsArrAsSet y)
+let rec initializeAmemory mem = function
+     |AbsVar(varName,varSign) -> ((varName, varSign) :: (fst mem), snd mem)
+     |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
+     |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
+
+//(string * Sign( list * (char * Set<Sign>) list
+let initializeAbstractMemory inputMem : ((string *Sign) list * (char * Set<Sign>) list )  =
+    match inputMem with
+    |AbstractMemory mem -> initializeAmemory ([],[]) mem
+    | _ -> failwith "This is not an abstract memory"
+ 
+*)
+
 let rec stringifyA = function
     | Num x -> string x
     | Var(x) -> x
@@ -318,6 +342,28 @@ let semHat action M =
                                                                Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
                                                                    Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
    
+
+(*let transitionAbs pg sem (q, mem) =
+    let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
+    let rec trans edges =
+        match edges with
+        | [] -> []
+        | (_, action, qTo) :: edges -> match semHat action mem with
+                                       | mem' -> (qTo, mem') :: trans edges
+                                       | _ -> trans edges
+    trans E
+let rec iterateAbs pg sem (q, mem) c =
+    match transitionAbs pg sem (q, mem) with
+    | [] -> printfn "%A" (q, mem)
+            (q, mem)
+    | t :: _ when c > 0 -> printfn "%A" t
+                           iterateAbs pg semHat t (c - 1)
+    | _ -> printfn "%A" (q, mem)
+           (q, mem)
+
+
+let interpretAbs pg memStart =
+    iterateAbs pg semHat ("qStart", memStart) 40*)
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
@@ -384,7 +430,11 @@ let rec guardedCommandLanguageRunner n =
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
                 printf "k: %A" k
-                // TODO Implement
+                let memory2 = initializeAbstractMemory k
+                printfn "Initial memory: %A" memory2
+                let collection = Set.empty.Add(memory2)
+                edgesD "qStart" "qEnd" e 1
+                printfn "%s" (generateTerminalInformationAbs (interpretAbs (edgesD "qStart" "qEnd" e 1) collection))
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
