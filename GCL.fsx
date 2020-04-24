@@ -339,8 +339,100 @@ let semHat action M =
                                                     match (Set.intersect signs (Set.ofList [Zero; Pos])).IsEmpty with
                                                     | true -> acc
                                                     | false -> let s = findArraySigns c absMem
-                                                               Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
+
+(*let transitionAbs pg sem (q, mem) =
+    let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
+    let rec trans edges =
+        match edges with
+        | [] -> []
+        | (_, action, qTo) :: edges -> match semHat action mem with
+                                       | mem' -> (qTo, mem') :: trans edges
+                                       | _ -> trans edges
+    trans E
+let rec iterateAbs pg sem (q, mem) c =
+    match transitionAbs pg sem (q, mem) with
+    | [] -> printfn "%A" (q, mem)
+            (q, mem)
+    | t :: _ when c > 0 -> printfn "%A" t
+                           iterateAbs pg semHat t (c - 1)
+    | _ -> printfn "%A" (q, mem)
+           (q, mem)
+
+
+let interpretAbs pg memStart =
+    iterateAbs pg semHat ("qStart", memStart) 40*)                                                               Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
                                                                    Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
+
+let rec fvA aExp =
+    match aExp with
+    | Num _ -> Set.empty
+    | Var x -> set[x]
+    | Array (c, i) -> Set.union (set[string c]) (fvA i)
+    | PlusExpr (x,y) -> Set.union (fvA x) (fvA y)
+    | MinusExpr (x,y) -> Set.union (fvA x) (fvA y)
+    | TimesExpr (x,y) -> Set.union (fvA x) (fvA y)
+    | DivExpr (x,y) -> Set.union (fvA x) (fvA y)
+    | UMinusExpr x -> fvA x
+    | PowExpr (x,y) -> Set.union (fvA x) (fvA y)
+    
+let rec fvB bExp =
+    match bExp with
+    | True -> Set.empty
+    | False -> Set.empty
+    | AndExpr (x, y) -> Set.union (fvB x) (fvB y)
+    | OrExpr (x, y) -> Set.union (fvB x) (fvB y)
+    | AndHardExpr (x, y) -> Set.union (fvB x) (fvB y)
+    | OrHardExpr (x, y) -> Set.union (fvB x) (fvB y)
+    | NotExpr x -> fvB x
+    | EqualExpr (x, y) -> Set.union (fvA x) (fvA y)
+    | NEqualExpr (x, y) -> Set.union (fvA x) (fvA y)
+    | GtExpr (x, y) -> Set.union (fvA x) (fvA y)
+    | GteExpr (x, y) -> Set.union (fvA x) (fvA y)
+    | LtExpr (x, y) -> Set.union (fvA x) (fvA y)
+    | LteExpr (x, y) -> Set.union (fvA x) (fvA y)
+    
+let rec makeFlow xs ys =
+    Set.fold (fun (acc:Set<'a*'a>) x -> Set.fold (fun acc y -> acc.Add(x,y)) acc ys) Set.empty xs
+
+let rec sec c x =
+    match c with
+    | AssignExpr (var, value) -> makeFlow (Set.union x (fvA value)) (set[var]) 
+    | AssignArrExpr (c, i, value) -> makeFlow (Set.union (Set.union x (fvA i)) (fvA value)) (set[string c]) 
+    | SeparatorExpr (c1, c2) -> Set.union (sec c1 x) (sec c2 x)
+    | IfExpr gc -> let w,_ = sec2 gc (False, x)
+                   w
+    | DoExpr gc -> let w,_ = sec2 gc (False, x)
+                   w
+    | Skip -> Set.empty
+and sec2 gc (d,x) =
+    match gc with
+    | FuncExpr (b, c) -> let w = sec c (Set.union (Set.union x (fvB b)) (fvB d))
+                         (w, OrExpr (b, d))
+    | ConcExpr (gc1, gc2) -> let (w1,d1) = sec2 gc1 (d,x)
+                             let (w2,d2) = sec2 gc2 (d1,x)
+                             (Set.union w1 w2, d2)
+
+let secure code allowedFlow =
+    let actualFlow = sec code Set.empty
+    printfn "%A" (Set.toList actualFlow)
+    //actualFlow.IsSubsetOf allowedFlow
+
+(*
+Work in progress
+let rec lessThan x y secLattice =
+    match secLattice with
+    | [] -> false
+    | (secLvl1, secLvl2) :: _ when secLvl1 = x && secLvl2 = y -> true
+    | _ :: scs -> lessThan x y scs
+    
+let flowRelation x y secLattice
+
+let calculateAllowedFlows secLattice secClass acc =
+    List.fold (fun acc (var, secLvl) -> Set.union acc makeFlow (set[var]) (List.fold (fun acc (secLvl1, secLvl2) ->
+                if secLvl = secLvl1 then (List.fold (fun acc (var, secLvl) ->
+                    if secLvl = secLvl2 then acc.Add var) acc secClass) Set.empty secLattice) Set.empty secClass)
+*)
+
    
 
 (*let transitionAbs pg sem (q, mem) =
@@ -401,15 +493,17 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
+    
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
-    printf "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
+    printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
     let input = Console.ReadLine()
     if (input = "exit") then printfn "Exiting Guarded Command Language"
     else
         try
             let e = parse input
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
+            secure e "a"
             getUserInputDOrNd e
             
             let environmentMode = getUserInputChooseEnvironment ""

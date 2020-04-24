@@ -30,7 +30,7 @@ open System
   | LtExpr of (a * a)
   | LteExpr of (a * a)
   
-type Action = VAsgn of String * a
+type Action = VAsgn of string * a
               | AAsgn of char * a * a
               | Skip
               | Test of b
@@ -38,7 +38,7 @@ type Action = VAsgn of String * a
   | FuncExpr of (b * C)
   | ConcExpr of (GC * GC)
  and C =
-  | AssignExpr of (String * a)
+  | AssignExpr of (string * a)
   | AssignArrExpr of (char * a * a)
   | SeparatorExpr of (C * C)
   | IfExpr of (GC)
