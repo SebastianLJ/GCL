@@ -188,7 +188,7 @@ let rec opHat set1 set2 acc opBarBin opBarUn =
             | x :: xs -> opHat (Set.ofList xs) set2 (Set.union (opBarUn x) acc) opBarBin opBarUn
     | _ -> match Set.toList set1 with
            | [] -> acc
-           | x::xs -> opHat (Set.ofList xs) set2 (Set.union (Set.fold (fun acc y -> Set.union (opBarBin x y) acc) Set.empty set2) acc) opBarBin opBarUn
+           | x::xs -> opHat (Set.ofList xs) set2 (Set.fold (fun acc y -> Set.union (opBarBin x y) acc) acc set2) opBarBin opBarUn
 
 let sign x = if x = 0 then Zero elif x > 0 then Pos else Neg
 
@@ -362,7 +362,39 @@ let rec iterateAbs pg sem (q, mem) c =
 
 
 let interpretAbs pg memStart =
-    iterateAbs pg semHat ("qStart", memStart) 40*)                                                             
+    iterateAbs pg semHat ("qStart", memStart) 40*)
+    
+let rec initializeAnaAsgn anaMap = function
+    |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
+    |[] -> anaMap
+
+
+let rec getNodes = function
+    |(x,_,y)::edges -> Set.union (set [x;y]) (getNodes edges )
+    |[] -> Set.empty
+
+//need nodes on list form with string names.
+//need edges on form (qo, action, qc) 
+let third (_,_,c) = c
+let WorklistAlg initAbstractMems edges =
+    let nodes = Set.toList (getNodes edges)
+    let map = initializeAnaAsgn Map.empty nodes
+    let mutable map2 = Map.add "qStart" initAbstractMems map
+    printfn "test1: %A" map2
+    let mutable workList = Set.empty.Add "qStart"
+    while not (Set.isEmpty workList) do
+        let q = List.head (Set.toList workList)
+        workList <-  Set.remove q workList
+        for (qo,A,qc) in edges do
+            if qo = q then
+                let e1 = semHat (A) (Map.find qo map2)
+                let e2 = Map.find (qc) map2
+                let e3 = Set.union e1 e2
+                if not (Set.isSubset e1 e2)then
+                 map2 <- Map.add (qc) (e3) map2
+                 workList <- Set.union workList (set[qc])
+                
+    Map.find "qEnd" map2 
 
 let rec fvA aExp =
     match aExp with
@@ -434,29 +466,6 @@ let calculateAllowedFlows secLattice secClass acc =
                     if secLvl = secLvl2 then acc.Add var) acc secClass) Set.empty secLattice) Set.empty secClass)
 *)
 
-   
-
-(*let transitionAbs pg sem (q, mem) =
-    let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
-    let rec trans edges =
-        match edges with
-        | [] -> []
-        | (_, action, qTo) :: edges -> match semHat action mem with
-                                       | mem' -> (qTo, mem') :: trans edges
-                                       | _ -> trans edges
-    trans E
-let rec iterateAbs pg sem (q, mem) c =
-    match transitionAbs pg sem (q, mem) with
-    | [] -> printfn "%A" (q, mem)
-            (q, mem)
-    | t :: _ when c > 0 -> printfn "%A" t
-                           iterateAbs pg semHat t (c - 1)
-    | _ -> printfn "%A" (q, mem)
-           (q, mem)
-
-
-let interpretAbs pg memStart =
-    iterateAbs pg semHat ("qStart", memStart) 40*)
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
@@ -494,44 +503,7 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
-
-
-let rec initializeAnaAsgn anaMap = function
-    |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
-    |[] -> anaMap
-
-
-let rec getNodes = function
-    |(x,_,y)::edges -> Set.union (set [x;y]) (getNodes edges )
-    |[] -> Set.empty
-
-//need nodes on list form with string names.
-//need edges on form (qo, action, qc) 
-let third (_,_,c) = c
-let WorklistAlg initAbstractMems edges =
-    let nodes = Set.toList (getNodes edges)
-    let map = initializeAnaAsgn Map.empty nodes
-    let mutable map2 = Map.add "qStart" initAbstractMems map
-    printfn "test1: %A" map2
-    let mutable workList = Set.empty.Add "qStart"
-    while not (Set.isEmpty workList) do
-        let q = List.head (Set.toList workList)
-        workList <-  Set.remove q workList
-        for (qo,A,qc) in edges do
-            if qo = q then
-                let e1 = semHat (A) (Map.find qo map2)
-                let e2 = Map.find (qc) map2
-                let e3 = Set.union e1 e2
-                if not (Set.isSubset e1 e2)then
-                 map2 <- Map.add (qc) (e3) map2
-                 workList <- Set.union workList (set[qc])
-                
-    Map.find "qEnd" map2        
                
-          
-            
-   
-    
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -563,7 +535,7 @@ let rec guardedCommandLanguageRunner n =
                 let k = parseInitMem initialMem
                 printf "k: %A \n" k
                 let memory2 = initializeAbstractMemory k
-                printfn "Initial memory: %A \n" memory2
+                printfn "Initial abstract memory: %A \n" memory2
                 let collection = Set.empty.Add(memory2)
                 let endnode = WorklistAlg collection (edgesD "qStart" "qEnd" e 1)
                 printfn "%A" endnode

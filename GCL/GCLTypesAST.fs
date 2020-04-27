@@ -3,8 +3,7 @@
 module GCLTypesAST
 open System
 
-
- type a = 
+type a = 
   | Num of int
   | Var of string
   | Array of (char*a)
@@ -15,7 +14,7 @@ open System
   | UMinusExpr of (a)
   | PowExpr of (a * a)
 
- type b =
+type b =
   | True
   | False
   | AndExpr of (b * b)
@@ -45,7 +44,7 @@ type Action = VAsgn of string * a
   | DoExpr of (GC)
   | Skip
 
-type Signk  = Neg | Zero | Pos
+type Sign  = Neg | Zero | Pos
 (* type Signa =
   | Sign
   | Num of int
