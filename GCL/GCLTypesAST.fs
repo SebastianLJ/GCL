@@ -45,7 +45,7 @@ type Action = VAsgn of string * a
   | DoExpr of (GC)
   | Skip
 
-type Sign = Neg | Zero | Pos
+type Signk  = Neg | Zero | Pos
 (* type Signa =
   | Sign
   | Num of int

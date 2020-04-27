@@ -56,22 +56,22 @@ let stringifyAbsMem mem =
 let generateTerminalInformationAbs (q, mem) =
     "status: " + if q = "qEnd" then "terminated\n" else "stuck\n"
     + "Node: " + q + "\n"
-    + stringifyAbsMem mem
+    + stringifyAbsMem mem*)
+let stringToSign x = if x="+" then Pos elif x="-" then Neg else Zero
 let rec setupAbsArrAsSet = function
-     | Sign x -> Set.empty.Add(x)
-     | Signs(x, y) -> Set.union (Set.empty.Add(x)) (setupAbsArrAsSet y)
+     | Sign x -> Set.empty.Add(stringToSign x)
+     | Signs(x, y) -> Set.union (Set.empty.Add(stringToSign x)) (setupAbsArrAsSet y)
 let rec initializeAmemory mem = function
-     |AbsVar(varName,varSign) -> ((varName, varSign) :: (fst mem), snd mem)
+     |AbsVar(varName,varSign) -> ((varName, stringToSign varSign) :: (fst mem), snd mem)
      |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
      |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
 
 //(string * Sign( list * (char * Set<Sign>) list
-let initializeAbstractMemory inputMem : ((string *Sign) list * (char * Set<Sign>) list )  =
+let initializeAbstractMemory (inputMem)  = //make this return (string*Sign) list (char * Set<Sign>) list
     match inputMem with
     |AbstractMemory mem -> initializeAmemory ([],[]) mem
     | _ -> failwith "This is not an abstract memory"
  
-*)
 
 let rec stringifyA = function
     | Num x -> string x
@@ -339,6 +339,8 @@ let semHat action M =
                                                     match (Set.intersect signs (Set.ofList [Zero; Pos])).IsEmpty with
                                                     | true -> acc
                                                     | false -> let s = findArraySigns c absMem
+                                                               Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
+                                                                   Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
 
 (*let transitionAbs pg sem (q, mem) =
     let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
@@ -360,8 +362,7 @@ let rec iterateAbs pg sem (q, mem) c =
 
 
 let interpretAbs pg memStart =
-    iterateAbs pg semHat ("qStart", memStart) 40*)                                                               Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
-                                                                   Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
+    iterateAbs pg semHat ("qStart", memStart) 40*)                                                             
 
 let rec fvA aExp =
     match aExp with
@@ -493,6 +494,43 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
+
+
+let rec initializeAnaAsgn anaMap = function
+    |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
+    |[] -> anaMap
+
+
+let rec getNodes = function
+    |(x,_,y)::edges -> Set.union (set [x;y]) (getNodes edges )
+    |[] -> Set.empty
+
+//need nodes on list form with string names.
+//need edges on form (qo, action, qc) 
+let third (_,_,c) = c
+let WorklistAlg initAbstractMems edges =
+    let nodes = Set.toList (getNodes edges)
+    let map = initializeAnaAsgn Map.empty nodes
+    let mutable map2 = Map.add "qStart" initAbstractMems map
+    printfn "test1: %A" map2
+    let mutable workList = Set.empty.Add "qStart"
+    while not (Set.isEmpty workList) do
+        let q = List.head (Set.toList workList)
+        workList <-  Set.remove q workList
+        for (qo,A,qc) in edges do
+            if qo = q then
+                let e1 = semHat (A) (Map.find qo map2)
+                let e2 = Map.find (qc) map2
+                let e3 = Set.union e1 e2
+                if not (Set.isSubset e1 e2)then
+                 map2 <- Map.add (qc) (e3) map2
+                 workList <- Set.union workList (set[qc])
+                
+    Map.find "qEnd" map2        
+               
+          
+            
+   
     
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
@@ -513,9 +551,9 @@ let rec guardedCommandLanguageRunner n =
                 Console.WriteLine("Enter the initial memory: ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
-                printf "k: %A" k
+                printf "k: %A \n" k
                 let memory2 = initializeConcreteMemory k
-                printfn "Initial memory: %A" memory2
+                printfn "Initial memory: %A \n" memory2
                 printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
@@ -523,12 +561,13 @@ let rec guardedCommandLanguageRunner n =
                 Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
                 let initialMem = Console.ReadLine()
                 let k = parseInitMem initialMem
-                printf "k: %A" k
+                printf "k: %A \n" k
                 let memory2 = initializeAbstractMemory k
-                printfn "Initial memory: %A" memory2
+                printfn "Initial memory: %A \n" memory2
                 let collection = Set.empty.Add(memory2)
-                edgesD "qStart" "qEnd" e 1
-                printfn "%s" (generateTerminalInformationAbs (interpretAbs (edgesD "qStart" "qEnd" e 1) collection))
+                let endnode = WorklistAlg collection (edgesD "qStart" "qEnd" e 1)
+                printfn "%A" endnode
+                                //printfn "%s" (generateTerminalInformationAbs (interpretAbs (edgesD "qStart" "qEnd" e 1) collection))              
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
