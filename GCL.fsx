@@ -51,14 +51,6 @@ let generateTerminalInformation (q, mem) =
     + "Node: " + q + "\n"
     + stringifyMem mem
 
-(*
-let stringifyAbsMem mem =
-    List.fold (fun acc (var, value) -> acc + var + ": " +  value + "\n") "" (fst mem)
-    + List.fold (fun acc (arr, array) -> acc + string arr + ": " + (string) array ) "" (snd mem)
-let generateTerminalInformationAbs (q, mem) =
-    "status: " + if q = "qEnd" then "terminated\n" else "stuck\n"
-    + "Node: " + q + "\n"
-    + stringifyAbsMem mem*)
 let stringToSign x = if x="+" then Pos elif x="-" then Neg else Zero
 let rec setupAbsArrAsSet = function
      | Sign x -> Set.empty.Add(stringToSign x)
@@ -68,7 +60,7 @@ let rec initializeAmemory mem = function
      |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
      |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
 
-let initializeAbstractMemory (inputMem)  = //make this return (string*Sign) list (char * Set<Sign>) list
+let initializeAbstractMemory (inputMem)  = 
     match inputMem with
     |AbstractMemory mem -> initializeAmemory ([],[]) mem
     | _ -> failwith "This is not an abstract memory"
@@ -345,28 +337,7 @@ let semHat action M =
                                                                Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
                                                                    Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
 
-(*let transitionAbs pg sem (q, mem) =
-    let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
-    let rec trans edges =
-        match edges with
-        | [] -> []
-        | (_, action, qTo) :: edges -> match semHat action mem with
-                                       | mem' -> (qTo, mem') :: trans edges
-                                       | _ -> trans edges
-    trans E
-let rec iterateAbs pg sem (q, mem) c =
-    match transitionAbs pg sem (q, mem) with
-    | [] -> printfn "%A" (q, mem)
-            (q, mem)
-    | t :: _ when c > 0 -> printfn "%A" t
-                           iterateAbs pg semHat t (c - 1)
-    | _ -> printfn "%A" (q, mem)
-           (q, mem)
-
-
-let interpretAbs pg memStart =
-    iterateAbs pg semHat ("qStart", memStart) 40*)
-    
+  
 let rec initializeAnaAsgn anaMap = function
     |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
     |[] -> anaMap
@@ -376,8 +347,7 @@ let rec getNodes = function
     |(x,_,y)::edges -> Set.union (set [x;y]) (getNodes edges )
     |[] -> Set.empty
 
-//need nodes on list form with string names.
-//need edges on form (qo, action, qc) 
+
 let third (_,_,c) = c
 let WorklistAlg initAbstractMems edges =
     let nodes = Set.toList (getNodes edges)
@@ -509,7 +479,11 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
-               
+                
+          
+            
+   
+    
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -545,7 +519,6 @@ let rec guardedCommandLanguageRunner n =
                 let collection = Set.empty.Add(memory2)
                 let endnode = WorklistAlg collection (edgesD "qStart" "qEnd" e 1)
                 printfn "%A" endnode
-                                //printfn "%s" (generateTerminalInformationAbs (interpretAbs (edgesD "qStart" "qEnd" e 1) collection))              
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
