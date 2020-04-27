@@ -36,6 +36,8 @@ open MemoryLexer
 
 open StepWiseExecution
 
+
+// ------------------------- Stringify functions ------------------------- //
 let stringifyMem mem =
     let rec iteri arr array i acc =
         match array with
@@ -66,7 +68,6 @@ let rec initializeAmemory mem = function
      |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
      |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
 
-//(string * Sign( list * (char * Set<Sign>) list
 let initializeAbstractMemory (inputMem)  = //make this return (string*Sign) list (char * Set<Sign>) list
     match inputMem with
     |AbstractMemory mem -> initializeAmemory ([],[]) mem
@@ -112,6 +113,8 @@ let rec graphVizifyHelper = function
 
 let graphVizify pg = "digraph program_graph {rankdir=LR;\nnode [shape = circle]; q▷;\nnode [shape = doublecircle]; q◀;\nnode [shape = circle]\n" +
                       graphVizifyHelper pg + "}"
+
+// ------------------------- Sign Analysis ------------------------- //
 
 let rec setupArrAsList = function
      | ConNum x -> [ x ]
@@ -396,6 +399,7 @@ let WorklistAlg initAbstractMems edges =
                 
     Map.find "qEnd" map2 
 
+// ------------------------- Security Analysis ------------------------- //
 let rec fvA aExp =
     match aExp with
     | Num _ -> Set.empty
@@ -466,6 +470,8 @@ let calculateAllowedFlows secLattice secClass acc =
                     if secLvl = secLvl2 then acc.Add var) acc secClass) Set.empty secLattice) Set.empty secClass)
 *)
 
+
+// ------------------------- User Interface ------------------------- //
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
