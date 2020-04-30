@@ -106,7 +106,6 @@ let rec graphVizifyHelper = function
 let graphVizify pg = "digraph program_graph {rankdir=LR;\nnode [shape = circle]; q▷;\nnode [shape = doublecircle]; q◀;\nnode [shape = circle]\n" +
                       graphVizifyHelper pg + "}"
 
-// ------------------------- Sign Analysis ------------------------- //
 
 let rec setupArrAsList = function
      | ConNum x -> [ x ]
@@ -121,6 +120,9 @@ let initializeConcreteMemory inputMem =
     match inputMem with
     | ConcreteMemory mem -> initializeCMemory ([],[]) mem
     | _                  -> failwith "This is not a concrete memory!"
+    
+// ------------------------- Sign Analysis ------------------------- //
+
 let signAdd x y =
     match (x, y) with
     | (Pos, Pos) -> Set.empty.Add(Pos)
@@ -353,7 +355,6 @@ let WorklistAlg initAbstractMems edges =
     let nodes = Set.toList (getNodes edges)
     let map = initializeAnaAsgn Map.empty nodes
     let mutable map2 = Map.add "qStart" initAbstractMems map
-    printfn "test1: %A" map2
     let mutable workList = Set.empty.Add "qStart"
     while not (Set.isEmpty workList) do
         let q = List.head (Set.toList workList)
@@ -367,7 +368,7 @@ let WorklistAlg initAbstractMems edges =
                  map2 <- Map.add (qc) (e3) map2
                  workList <- Set.union workList (set[qc])
                 
-    Map.find "qEnd" map2 
+    map2 
 
 // ------------------------- Security Analysis ------------------------- //
 let rec fvA aExp =
@@ -481,9 +482,7 @@ let parse input =
     res
                 
           
-            
-   
-    
+                   
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -512,13 +511,24 @@ let rec guardedCommandLanguageRunner n =
                 try
                 Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
                 let initialMem = Console.ReadLine()
-                let k = parseInitMem initialMem
-                printf "k: %A \n" k
-                let memory2 = initializeAbstractMemory k
-                printfn "Initial abstract memory: %A \n" memory2
-                let collection = Set.empty.Add(memory2)
-                let endnode = WorklistAlg collection (edgesD "qStart" "qEnd" e 1)
-                printfn "%A" endnode
+                let parsedMemory = parseInitMem initialMem
+//                printf "k: %A \n" k
+                let memory = initializeAbstractMemory parsedMemory
+                printfn "Initial abstract memory: %A \n" memory
+                let mutable collectionOfMems = Set.empty.Add(memory)
+                let mutable reply="Y"
+                while(reply="Y") do
+                    Console.WriteLine("Do you want to add another initial abstract memory? (Y/N)")
+                    reply <- Console.ReadLine()
+                    if reply = "Y" then 
+                     Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
+                     let initialMem = Console.ReadLine()
+                     let k = parseInitMem initialMem
+//                     printf "k: %A \n" k
+                     let memory = initializeAbstractMemory k
+                     collectionOfMems <- Set.union collectionOfMems (Set.empty.Add memory)                       
+                let configurations = WorklistAlg collectionOfMems (edgesD "qStart" "qEnd" e 1)
+                printfn "%A" configurations
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
