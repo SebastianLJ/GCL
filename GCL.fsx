@@ -213,7 +213,7 @@ let BSignOr x y =
     | (true, true) -> Set.empty.Add(true)
     | (true, false) -> Set.empty.Add(true)
     | (false, true) -> Set.empty.Add(true)
-    | (false, false) -> Set.empty.Add(true)
+    | (false, false) -> Set.empty.Add(false)
 let BSignAndH x y =
     match (x, y) with
     | (false, _) -> Set.empty.Add(false)
@@ -352,24 +352,81 @@ let rec getNodes = function
 
 let third (_,_,c) = c
 let WorklistAlg initAbstractMems edges =
-    let nodes = Set.toList (getNodes edges)
-    let map = initializeAnaAsgn Map.empty nodes
-    let mutable map2 = Map.add "qStart" initAbstractMems map
-    let mutable workList = Set.empty.Add "qStart"
+    let nodes = List.filter(fun x -> x <> "qStart") (Set.toList (getNodes edges)) //all nodes except start node
+    let mutable map = initializeAnaAsgn Map.empty nodes //initialize map
+    map <- Map.add "qStart" initAbstractMems map //start node analysis assignment just consists of given input
+    let mutable workList = Set.empty.Add "qStart" //initialize worklist
     while not (Set.isEmpty workList) do
         let q = List.head (Set.toList workList)
         workList <-  Set.remove q workList
         for (qo,A,qc) in edges do
             if qo = q then
-                let e1 = semHat (A) (Map.find qo map2)
-                let e2 = Map.find (qc) map2
-                let e3 = Set.union e1 e2
+                let e1 = semHat (A) (Map.find qo map) //result of evaluating S[[a]](A(qo))
+//                printfn "Map.find q0 map: %A" (Map.find qo map)
+//                printfn "q0: %A, result of evaluating S[[a]](A(qo)): %A" qo e1
+                let e2 = Map.find (qc) map //A(qc)
+//                printfn "qc: %A, A(qc) : %A" qc e2
+                let e3 = Set.union e1 e2   
                 if not (Set.isSubset e1 e2)then
-                 map2 <- Map.add (qc) (e3) map2
+                 map <- Map.add (qc) (e3) map
+//                 printfn "Map: %A \n \n" map
                  workList <- Set.union workList (set[qc])
-                
-    map2 
+                 //printfn "WorkList: %A" workList
 
+                
+    map
+
+let signToStringVar x = if x=Pos then "+" elif x=Neg then "-" else "0"
+
+let signSetToString x =
+    let mutable Set ="{ "
+    for i in x do
+        Set <- Set + signToStringVar i + ", "
+    let Set = Set + " }"
+    Set
+let findVarSign varList var = snd (List.find (fun (varName, sign) ->  varName=var) varList)
+let findArrSign arrList arr = snd (List.find (fun (arrName, setSign) ->  arrName=arr) arrList)
+
+let rec genVarList lstTup varList =
+    match lstTup with
+    |(varName, _)::lstTup -> genVarList lstTup (varName::varList)
+    |_-> varList
+let rec genArrList lstTup arrList =
+    match lstTup with
+    |(arrName, _ )::lstTup -> genArrList lstTup (arrName::arrList)
+    |_ -> arrList
+let endMemToLstOfVars mp =
+    let setEndMem = Map.find "qEnd" mp
+    let lst = Set.toList setEndMem
+    genVarList (fst(List.head lst)) []
+let endMemToLstOfArrs mp =
+    let setEndMem = Map.find "qEnd" mp
+    let lst = Set.toList setEndMem
+    genArrList (snd(List.head lst)) []
+let rec prettyPrintLine varNameLst arrNameLst varList arrList =
+    match (varNameLst, arrNameLst) with 
+    |(varName::varNameLst, _) -> signToStringVar (findVarSign varList varName) + " " + prettyPrintLine varNameLst arrNameLst varList arrList
+    |([], arrName::arrNameLst) -> signSetToString (findArrSign arrList arrName) + " " + prettyPrintLine varNameLst arrNameLst varList arrList
+    |_ -> ""
+let rec prettyPrint lst varNameLst arrNameLst =
+    match lst with
+    |x::lst -> "\t \t" + prettyPrintLine varNameLst arrNameLst (fst x) (snd x) + "\n" + prettyPrint lst varNameLst arrNameLst
+    | _ -> "\n"
+let rec toprow varNameLst arrNameLst =
+    match (varNameLst, arrNameLst) with
+    |(x::varNameLst, _ ) -> x + " " + toprow varNameLst arrNameLst
+    |([], y::arrNameLst) -> (string) y + " " + toprow varNameLst arrNameLst
+    |_ -> ""
+let initialize mp =
+    let setEndMem = Map.find "qEnd" mp
+    let lst = Set.toList setEndMem
+    let varNameLst = List.sort (endMemToLstOfVars mp)
+    let arrNameLst = List.sort (endMemToLstOfArrs mp)
+    toprow varNameLst arrNameLst + "\n" +
+    prettyPrint lst varNameLst arrNameLst
+let t = prettyPrintLine (["x";"y";"z"]) (['A';'B';'C']) ([("x",Pos); ("y", Neg); ("z", Zero)]) ([('A',set [Pos]); ('B', set [Neg]); ('C', set [Zero])])
+
+let k = prettyPrint [([("x",Pos); ("y", Neg); ("z", Zero)],[('A',set[Pos]);('B', set[Neg]); ('C', set[Zero])])]  ["x";"y";"z"] ['A';'B';'C']
 // ------------------------- Security Analysis ------------------------- //
 let rec fvA aExp =
     match aExp with
@@ -512,7 +569,6 @@ let rec guardedCommandLanguageRunner n =
                 Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
                 let initialMem = Console.ReadLine()
                 let parsedMemory = parseInitMem initialMem
-//                printf "k: %A \n" k
                 let memory = initializeAbstractMemory parsedMemory
                 printfn "Initial abstract memory: %A \n" memory
                 let mutable collectionOfMems = Set.empty.Add(memory)
@@ -524,11 +580,11 @@ let rec guardedCommandLanguageRunner n =
                      Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
                      let initialMem = Console.ReadLine()
                      let k = parseInitMem initialMem
-//                     printf "k: %A \n" k
                      let memory = initializeAbstractMemory k
                      collectionOfMems <- Set.union collectionOfMems (Set.empty.Add memory)                       
                 let configurations = WorklistAlg collectionOfMems (edgesD "qStart" "qEnd" e 1)
-                printfn "%A" configurations
+                let str = initialize configurations
+                printfn "\t     endConfig:\n \n \t \t%s" str
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
