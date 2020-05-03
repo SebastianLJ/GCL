@@ -1,0 +1,33 @@
+﻿// The generated lexer module will start with this code
+{
+module SecurityLexer
+open FSharp.Text.Lexing
+open System
+// open the module that defines the tokens
+open SecurityParser
+}
+
+// We define macros for some regular expressions we will use later
+let digit       = ['0'-'9']
+let array       = ['A'-'Z']
+let x           = ['a'-'z' 'A'-'Z'](['a'-'z' 'A'-'Z'] | "\d_")*
+let whitespace  = [' ' '\n' '\r' '\t']
+
+
+// We define now the rules for recognising and building tokens
+// for each of the tokens of our language we need a rule
+// NOTE: rules are applied in order top-down. 
+//       This is important when tokens overlap (not in this example)
+rule tokenize = parse
+// deal with tokens that need to be ignored (skip them)
+
+// deal with tokens that need to be built
+//Move below into separate file
+| whitespace    { tokenize lexbuf }
+| array         { ARRAY(Char.Parse(LexBuffer<_>.LexemeString lexbuf)) }
+| x             { VAR(LexBuffer<_>.LexemeString lexbuf) }
+| '='           { ASSIGN }
+| ','           { SEPARATOR }
+| '<'           { LtSEPARATOR }
+| eof           { EOF }
+

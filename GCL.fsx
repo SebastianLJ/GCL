@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCL/GCLTypesAST.fs"
@@ -36,6 +36,17 @@ open MemoryLexer
 
 open StepWiseExecution
 
+#load "SecurityTypesAST.fs"
+
+open SecurityTypesAST
+
+#load "SecurityParser.fs"
+
+open SecurityParser
+
+#load "SecurityLexer.fs"
+
+open SecurityLexer
 
 // ------------------------- Stringify functions ------------------------- //
 let stringifyMem mem =
@@ -493,7 +504,13 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
-
+let parseSecurity input =
+    // translate string into a buffer of characters
+    let lexbuf = LexBuffer<char>.FromString input
+    // translate the buffer into a stream of tokens and parse them
+    let res = SecurityParser.start SecurityLexer.tokenize lexbuf
+    // return the result of parsing (i.e. value of type "expr")
+    res
 let rec setupAbsArrAsSet = function
      | Sign x -> Set.empty.Add(stringToSign x)
      | Signs(x, y) -> Set.union (Set.empty.Add(stringToSign x)) (setupAbsArrAsSet y)
@@ -592,10 +609,16 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
-                Console.WriteLine("Specify Security Lattice: ")
+                Console.WriteLine("Specify Security Lattice and give security classification for variables and arrays (press enter after each choice) : ")
+                let first = Console.ReadLine()
+                let parsedFirst = parseSecurity first
+                printfn "test1: %A" parsedFirst              
+                let second = Console.ReadLine()
+                let parsedSecond = parseSecurity second
+                printfn "test1: %A" parsedSecond              
+                // TODO Implement
                 let secLattice = [("public", "public"); ("public", "private"); ("private", "private")]
-                let secClass = [("x", "public"); ("y", "public"); ("z", "public")]
-                
+                let secClass = [("x", "public"); ("y", "public"); ("z", "public")]              
                 secure e (getAllowedFlows secClass secClass secLattice)
                 
                 with err -> printfn "%s" (err.Message)

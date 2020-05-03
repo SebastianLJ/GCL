@@ -2,4 +2,6 @@ fslex.exe GCL/GCLLexer.fsl --unicode
 fsyacc.exe GCL/GCLParser.fsp --module GCLParser
 fslex.exe MemoryLexer.fsl --unicode
 fsyacc.exe MemoryParser.fsp --module MemoryParser
+fslex.exe SecurityLexer.fsl --unicode
+fsyacc.exe SecurityParser.fsp --module SecurityParser
 fsi.exe GCL.fsx
