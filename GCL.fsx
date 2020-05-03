@@ -490,6 +490,23 @@ let calculateAllowedFlows secLattice secClass acc =
                     if secLvl = secLvl2 then acc.Add var) acc secClass) Set.empty secLattice) Set.empty secClass)
 *)
 
+let rec getSecFlows secLevel secLattice =
+    match secLattice with
+    | (x, y)::xs when x = secLevel -> y::(getSecFlows y xs)
+    | (x, y)::xs -> getSecFlows secLevel xs
+    | _ -> []
+
+let rec makeFlows ident permittedFlows secClass =
+    match secClass with
+    | (var, level)::xs when List.contains level permittedFlows -> (ident,var)::makeFlows ident permittedFlows xs
+    | (var, level)::xs -> makeFlows ident permittedFlows xs
+    | _ -> []
+
+let rec getAllowedFlows secClassFull secClassLoop secLattice =
+    match secClassLoop with
+    | (var, secLevel)::xs -> (makeFlows var (getSecFlows secLevel secLattice) secClassFull)::getAllowedFlows secClassFull xs secLattice
+    | _ -> []
+
 
 // ------------------------- User Interface ------------------------- //
 let rec getUserInputDOrNd e =
