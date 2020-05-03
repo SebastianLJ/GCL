@@ -615,7 +615,7 @@ let rec guardedCommandLanguageRunner n =
                 printfn "test1: %A" parsedFirst              
                 let second = Console.ReadLine()
                 let parsedSecond = parseSecurity second
-                printfn "test1: %A" parsedSecond              
+                printfn "test2: %A" parsedSecond              
                 // TODO Implement
                 let secLattice = [("public", "public"); ("public", "private"); ("private", "private")]
                 let secClass = [("x", "public"); ("y", "public"); ("z", "public")]              
