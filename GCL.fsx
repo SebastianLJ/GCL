@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCL/GCLTypesAST.fs"
@@ -52,18 +52,6 @@ let generateTerminalInformation (q, mem) =
     + stringifyMem mem
 
 let stringToSign x = if x="+" then Pos elif x="-" then Neg else Zero
-let rec setupAbsArrAsSet = function
-     | Sign x -> Set.empty.Add(stringToSign x)
-     | Signs(x, y) -> Set.union (Set.empty.Add(stringToSign x)) (setupAbsArrAsSet y)
-let rec initializeAmemory mem = function
-     |AbsVar(varName,varSign) -> ((varName, stringToSign varSign) :: (fst mem), snd mem)
-     |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
-     |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
-
-let initializeAbstractMemory (inputMem)  = 
-    match inputMem with
-    |AbstractMemory mem -> initializeAmemory ([],[]) mem
-    | _ -> failwith "This is not an abstract memory"
 
 let rec stringifyA = function
     | Num x -> string x
@@ -103,23 +91,15 @@ let rec graphVizifyHelper = function
     | (qs, label, qe)::xs -> qs + " -> " + qe + " [label = \"" + stringify label + "\"];\n" + graphVizifyHelper xs
 
 let graphVizify pg = "digraph program_graph {rankdir=LR;\nnode [shape = circle]; q▷;\nnode [shape = doublecircle]; q◀;\nnode [shape = circle]\n" +
-                      graphVizifyHelper pg + "}"
+                      graphVizifyHelper pg + "}\n"
 
 
-let rec setupArrAsList = function
-     | ConNum x -> [ x ]
-     | ConNums(x, y) -> x :: setupArrAsList y
-
-let rec initializeCMemory mem = function
-    | ConVar(varName, varValue) -> ((varName, varValue) :: (fst mem), snd mem)
-    | ConArr(arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr) :: (snd mem))
-    | ConSeq(e1, e2) -> initializeCMemory (initializeCMemory mem e1) e2
-
-let initializeConcreteMemory inputMem =
-    match inputMem with
-    | ConcreteMemory mem -> initializeCMemory ([],[]) mem
-    | _                  -> failwith "This is not a concrete memory!"
-    
+let rec stringifyFlow flow =
+    match flow with
+    | [] -> ""
+    | (x,y)::[] -> x + " -> " + y
+    | (x,y)::xys -> x + " -> " + y + ", " + stringifyFlow xys
+        
 // ------------------------- Sign Analysis ------------------------- //
 
 let signAdd x y =
@@ -471,24 +451,12 @@ and sec2 gc (d,x) =
 
 let secure code allowedFlow =
     let actualFlow = sec code Set.empty
-    printfn "%A" (Set.toList actualFlow)
-    //actualFlow.IsSubsetOf allowedFlow
-
-(*
-Work in progress
-let rec lessThan x y secLattice =
-    match secLattice with
-    | [] -> false
-    | (secLvl1, secLvl2) :: _ when secLvl1 = x && secLvl2 = y -> true
-    | _ :: scs -> lessThan x y scs
+    let violation = Set.difference actualFlow (Set.ofList allowedFlow)
     
-let flowRelation x y secLattice
-
-let calculateAllowedFlows secLattice secClass acc =
-    List.fold (fun acc (var, secLvl) -> Set.union acc makeFlow (set[var]) (List.fold (fun acc (secLvl1, secLvl2) ->
-                if secLvl = secLvl1 then (List.fold (fun acc (var, secLvl) ->
-                    if secLvl = secLvl2 then acc.Add var) acc secClass) Set.empty secLattice) Set.empty secClass)
-*)
+    printfn "Actual flow: %s" (stringifyFlow (Set.toList actualFlow))
+    printfn "Allowed flow: %s" (stringifyFlow allowedFlow)
+    printfn "Violations: %s" (stringifyFlow (Set.toList violation))
+    printfn "%s\n" (if violation.IsEmpty then "Secure" else "Not Secure")
 
 let rec getSecFlows secLevel secLattice =
     match secLattice with
@@ -506,7 +474,52 @@ let rec getAllowedFlows secClassFull secClassLoop secLattice =
     match secClassLoop with
     | (var, secLevel)::xs -> (makeFlows var (getSecFlows secLevel secLattice) secClassFull)@getAllowedFlows secClassFull xs secLattice
     | _ -> []
+    
 
+// ------------------------- Parser Methods ------------------------- //
+
+let parseInitMem input =
+    // translate string into a buffer of characters
+    let lexbuf = LexBuffer<char>.FromString input
+    // translate the buffer into a stream of tokens and parse them
+    let res = MemoryParser.start MemoryLexer.tokenize lexbuf
+    // return the result of parsing (i.e. value of type "expr")
+    res
+
+let parse input =
+    // translate string into a buffer of characters
+    let lexbuf = LexBuffer<char>.FromString input
+    // translate the buffer into a stream of tokens and parse them
+    let res = GCLParser.start GCLLexer.tokenize lexbuf
+    // return the result of parsing (i.e. value of type "expr")
+    res
+
+let rec setupAbsArrAsSet = function
+     | Sign x -> Set.empty.Add(stringToSign x)
+     | Signs(x, y) -> Set.union (Set.empty.Add(stringToSign x)) (setupAbsArrAsSet y)
+let rec initializeAmemory mem = function
+     |AbsVar(varName,varSign) -> ((varName, stringToSign varSign) :: (fst mem), snd mem)
+     |AbsArr(arrName, arr) -> (fst mem, (arrName, setupAbsArrAsSet arr) :: snd mem)
+     |AbsSeq(e1,e2) -> initializeAmemory (initializeAmemory mem e1) e2
+
+let initializeAbstractMemory (inputMem)  = 
+    match inputMem with
+    |AbstractMemory mem -> initializeAmemory ([],[]) mem
+    | _ -> failwith "This is not an abstract memory"
+
+let rec setupArrAsList = function
+     | ConNum x -> [ x ]
+     | ConNums(x, y) -> x :: setupArrAsList y
+
+let rec initializeCMemory mem = function
+    | ConVar(varName, varValue) -> ((varName, varValue) :: (fst mem), snd mem)
+    | ConArr(arrName, arr) -> ((fst mem), (arrName, setupArrAsList arr) :: (snd mem))
+    | ConSeq(e1, e2) -> initializeCMemory (initializeCMemory mem e1) e2
+
+let initializeConcreteMemory inputMem =
+    match inputMem with
+    | ConcreteMemory mem -> initializeCMemory ([],[]) mem
+    | _                  -> failwith "This is not a concrete memory!"
 
 // ------------------------- User Interface ------------------------- //
 let rec getUserInputDOrNd e =
@@ -525,27 +538,13 @@ let rec getUserInputChooseEnvironment choice =
     let choice = Console.ReadLine()
     try
     if int choice > 3 then
+        printf "\n"
         getUserInputChooseEnvironment choice
     else
+        printf "\n"
         int choice
     with _ -> getUserInputChooseEnvironment choice  
-
-let parseInitMem input =
-    // translate string into a buffer of characters
-    let lexbuf = LexBuffer<char>.FromString input
-    // translate the buffer into a stream of tokens and parse them
-    let res = MemoryParser.start MemoryLexer.tokenize lexbuf
-    // return the result of parsing (i.e. value of type "expr")
-    res
-
-let parse input =
-    // translate string into a buffer of characters
-    let lexbuf = LexBuffer<char>.FromString input
-    // translate the buffer into a stream of tokens and parse them
-    let res = GCLParser.start GCLLexer.tokenize lexbuf
-    // return the result of parsing (i.e. value of type "expr")
-    res
-               
+       
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -594,8 +593,11 @@ let rec guardedCommandLanguageRunner n =
             elif environmentMode = 3 then
                 try
                 Console.WriteLine("Specify Security Lattice: ")
-                secure e "a"
-                // TODO Implement
+                let secLattice = [("public", "public"); ("public", "private"); ("private", "private")]
+                let secClass = [("x", "public"); ("y", "public"); ("z", "public")]
+                
+                secure e (getAllowedFlows secClass secClass secLattice)
+                
                 with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
 
