@@ -64,7 +64,6 @@ let initializeAbstractMemory (inputMem)  =
     match inputMem with
     |AbstractMemory mem -> initializeAmemory ([],[]) mem
     | _ -> failwith "This is not an abstract memory"
- 
 
 let rec stringifyA = function
     | Num x -> string x
@@ -332,41 +331,21 @@ let semHat action M =
                                                        match s.IsEmpty with
                                                        | true -> acc
                                                        | false -> Set.fold (fun acc sign -> acc.Add(updateAbsVar var sign absMem)) acc s) Set.empty M
-    | AAsgn(c, i, a) -> Set.fold (fun acc absMem -> let signs = ASignOpp i absMem
-                                                    match (Set.intersect signs (set [Zero; Pos])).IsEmpty with
+    | AAsgn(c, i, a) -> Set.fold (fun acc absMem -> let index = ASignOpp i absMem
+                                                    match (Set.intersect index (set [Zero; Pos])).IsEmpty with
                                                     | true -> acc
                                                     | false -> let s = findArraySigns c absMem
                                                                Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
-                                                                   Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
-
-
-
-
-(*
-let test c absMem =
-   let signs = ASignOpp i absMem
-   let k  = findArraySigns c absMem
-   let entrieswithsignsprime = (Set.toList (findArraySigns c absMem)).Length
-   let entrieswithSignsdoubleprim =(Set.toList (findArraySigns c absMem)).Length
-   if entrieswithsignsprime = 1 then updateAbsArr c s'' absMem else updateAbsArr c (s.Add s'') absMem
-
-let s = findArraySigns c absMem
-let signs = ASignOpp i absMem
-Set.union s signs
-*)
-
+                                                                   Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc (ASignOpp a absMem)) acc s) Set.empty M
 
 let rec initializeAnaAsgn anaMap = function
     |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
     |[] -> anaMap
-
-
 let rec getNodes = function
     |(x,_,y)::edges -> Set.union (set [x;y]) (getNodes edges )
     |[] -> Set.empty
-
-
 let third (_,_,c) = c
+
 let WorklistAlg initAbstractMems edges =
     let nodes = List.filter(fun x -> x <> "qStart") (Set.toList (getNodes edges)) //all nodes except start node
     let mutable map = initializeAnaAsgn Map.empty nodes //initialize map
@@ -532,8 +511,7 @@ let rec getUserInputChooseEnvironment choice =
         getUserInputChooseEnvironment choice
     else
         int choice
-    with _ -> getUserInputChooseEnvironment choice
-
+    with _ -> getUserInputChooseEnvironment choice  
 
 let parseInitMem input =
     // translate string into a buffer of characters
@@ -550,9 +528,7 @@ let parse input =
     let res = GCLParser.start GCLLexer.tokenize lexbuf
     // return the result of parsing (i.e. value of type "expr")
     res
-                
-          
-                   
+               
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -562,46 +538,46 @@ let rec guardedCommandLanguageRunner n =
         try
             let e = parse input
             Console.WriteLine("Parsed tokens (AST): {0} ", e)
-            secure e "a"
             getUserInputDOrNd e
             
             let environmentMode = getUserInputChooseEnvironment ""
             
             if environmentMode = 1 then
                 try
-                Console.WriteLine("Enter the initial memory: ")
-                let initialMem = Console.ReadLine()
-                let k = parseInitMem initialMem
-                printf "k: %A \n" k
-                let memory2 = initializeConcreteMemory k
-                printfn "Initial memory: %A \n" memory2
-                printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
+                    Console.WriteLine("Enter the initial memory: ")
+                    let initialMem = Console.ReadLine()
+                    let k = parseInitMem initialMem
+                    printf "k: %A \n" k
+                    let memory2 = initializeConcreteMemory k
+                    printfn "Initial memory: %A \n" memory2
+                    printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
-                Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
-                let initialMem = Console.ReadLine()
-                let parsedMemory = parseInitMem initialMem
-                let memory = initializeAbstractMemory parsedMemory
-                printfn "Initial abstract memory: %A \n" memory
-                let mutable collectionOfMems = Set.empty.Add(memory)
-                let mutable reply="Y"
-                while(reply="Y") do
-                    Console.WriteLine("Do you want to add another initial abstract memory? (Y/N)")
-                    reply <- Console.ReadLine()
-                    if reply = "Y" then 
-                     Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
-                     let initialMem = Console.ReadLine()
-                     let k = parseInitMem initialMem
-                     let memory = initializeAbstractMemory k
-                     collectionOfMems <- Set.union collectionOfMems (Set.empty.Add memory)                       
-                let configurations = WorklistAlg collectionOfMems (edgesD "qStart" "qEnd" e 1)
-                let str = initialize configurations
-                printfn "\t     endConfig:\n \n \t \t%s" str
+                    Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
+                    let initialMem = Console.ReadLine()
+                    let parsedMemory = parseInitMem initialMem
+                    let memory = initializeAbstractMemory parsedMemory
+                    printfn "Initial abstract memory: %A \n" memory
+                    let mutable collectionOfMems = Set.empty.Add(memory)
+                    let mutable reply="Y"
+                    while(reply="Y") do
+                        Console.WriteLine("Do you want to add another initial abstract memory? (Y/N)")
+                        reply <- Console.ReadLine()
+                        if reply = "Y" then 
+                         Console.WriteLine("Enter the initial abstract memory (write zero for the sign 0): ")
+                         let initialMem = Console.ReadLine()
+                         let k = parseInitMem initialMem
+                         let memory = initializeAbstractMemory k
+                         collectionOfMems <- Set.union collectionOfMems (Set.empty.Add memory)                       
+                    let configurations = WorklistAlg collectionOfMems (edgesD "qStart" "qEnd" e 1)
+                    let str = initialize configurations
+                    printfn "\t     endConfig:\n \n \t \t%s" str
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
                 Console.WriteLine("Specify Security Lattice: ")
+                secure e "a"
                 // TODO Implement
                 with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
