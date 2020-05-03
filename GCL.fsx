@@ -194,7 +194,7 @@ let rec ASignOpp aExp absMem  =
     | Num x -> Set.empty.Add (sign x)
     | Var x -> Set.empty.Add(try (snd (List.find (fun (id, _) -> id = x) (fst absMem) )) with err -> failwith ("The variable " + x + " might not have been initialized"))
     | Array(c,a) -> let index = ASignOpp a absMem
-                    if (not (Set.intersect index (set [Zero; Pos])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) (snd absMem) )) else Set.empty
+                    if not ((Set.intersect index (set [Zero; Pos])).IsEmpty) then (snd (List.find (fun (id,_) -> id=c) (snd absMem) )) else Set.empty
     | PlusExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signAdd (fun _ -> Set.empty)
     | MinusExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signSub (fun _ -> Set.empty)
     | TimesExpr(x,y) -> opHat (ASignOpp x absMem) (ASignOpp y absMem) Set.empty signMul (fun _ -> Set.empty)
@@ -333,13 +333,36 @@ let semHat action M =
                                                        | true -> acc
                                                        | false -> Set.fold (fun acc sign -> acc.Add(updateAbsVar var sign absMem)) acc s) Set.empty M
     | AAsgn(c, i, a) -> Set.fold (fun acc absMem -> let signs = ASignOpp i absMem
-                                                    match (Set.intersect signs (Set.ofList [Zero; Pos])).IsEmpty with
+                                                    match (Set.intersect signs (set [Zero; Pos])).IsEmpty with
                                                     | true -> acc
                                                     | false -> let s = findArraySigns c absMem
                                                                Set.fold (fun acc s' -> Set.fold (fun acc s'' ->
                                                                    Set.union acc (set[updateAbsArr c ((s.Remove s').Add s'') absMem; updateAbsArr c (s.Add s'') absMem])) acc signs) acc s) Set.empty M
 
-  
+
+
+
+
+(*
+
+If the array only has one entry with the sign 𝑠′ it will be removed and replaced by
+the sign 𝑠′′ of the updated entry; if there are more entries with the sign 𝑠′ then we
+just include the sign 𝑠′′. Our definition caters for both possibilities.
+*)
+(*
+let test c absMem =
+   let signs = ASignOpp i absMem
+   let k  = findArraySigns c absMem
+   let entrieswithsignsprime = (Set.toList (findArraySigns c absMem)).Length
+   let entrieswithSignsdoubleprim =(Set.toList (findArraySigns c absMem)).Length
+   if entrieswithsignsprime = 1 then updateAbsArr c s'' absMem else updateAbsArr c (s.Add s'') absMem
+
+let s = findArraySigns c absMem
+let signs = ASignOpp i absMem
+Set.union s signs
+*)
+
+
 let rec initializeAnaAsgn anaMap = function
     |q::Q -> Map.add q Set.empty (initializeAnaAsgn anaMap Q)
     |[] -> anaMap
@@ -377,12 +400,16 @@ let WorklistAlg initAbstractMems edges =
     map
 
 let signToStringVar x = if x=Pos then "+" elif x=Neg then "-" else "0"
+open System.Text.RegularExpressions
 
 let signSetToString x =
-    let mutable Set ="{ "
+    let mutable Set ="{"
     for i in x do
-        Set <- Set + signToStringVar i + ", "
-    let Set = Set + " }"
+        Set <- Set + signToStringVar i + ","
+    Set <- Set + "}"
+    let pattern = ",}"
+    let k = Regex(pattern)
+    Set <- k.Replace(Set, "}")
     Set
 let findVarSign varList var = snd (List.find (fun (varName, sign) ->  varName=var) varList)
 let findArrSign arrList arr = snd (List.find (fun (arrName, setSign) ->  arrName=arr) arrList)
