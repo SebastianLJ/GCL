@@ -504,7 +504,7 @@ let rec makeFlows ident permittedFlows secClass =
 
 let rec getAllowedFlows secClassFull secClassLoop secLattice =
     match secClassLoop with
-    | (var, secLevel)::xs -> (makeFlows var (getSecFlows secLevel secLattice) secClassFull)::getAllowedFlows secClassFull xs secLattice
+    | (var, secLevel)::xs -> (makeFlows var (getSecFlows secLevel secLattice) secClassFull)@getAllowedFlows secClassFull xs secLattice
     | _ -> []
 
 
