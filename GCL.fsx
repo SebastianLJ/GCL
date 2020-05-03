@@ -342,13 +342,6 @@ let semHat action M =
 
 
 
-
-(*
-
-If the array only has one entry with the sign 𝑠′ it will be removed and replaced by
-the sign 𝑠′′ of the updated entry; if there are more entries with the sign 𝑠′ then we
-just include the sign 𝑠′′. Our definition caters for both possibilities.
-*)
 (*
 let test c absMem =
    let signs = ASignOpp i absMem
@@ -384,17 +377,12 @@ let WorklistAlg initAbstractMems edges =
         workList <-  Set.remove q workList
         for (qo,A,qc) in edges do
             if qo = q then
-                let e1 = semHat (A) (Map.find qo map) //result of evaluating S[[a]](A(qo))
-//                printfn "Map.find q0 map: %A" (Map.find qo map)
-//                printfn "q0: %A, result of evaluating S[[a]](A(qo)): %A" qo e1
-                let e2 = Map.find (qc) map //A(qc)
-//                printfn "qc: %A, A(qc) : %A" qc e2
+                let e1 = semHat (A) (Map.find qo map) 
+                let e2 = Map.find (qc) map 
                 let e3 = Set.union e1 e2   
                 if not (Set.isSubset e1 e2)then
                  map <- Map.add (qc) (e3) map
-//                 printfn "Map: %A \n \n" map
                  workList <- Set.union workList (set[qc])
-                 //printfn "WorkList: %A" workList
 
                 
     map
@@ -451,9 +439,7 @@ let initialize mp =
     let arrNameLst = List.sort (endMemToLstOfArrs mp)
     toprow varNameLst arrNameLst + "\n" +
     prettyPrint lst varNameLst arrNameLst
-let t = prettyPrintLine (["x";"y";"z"]) (['A';'B';'C']) ([("x",Pos); ("y", Neg); ("z", Zero)]) ([('A',set [Pos]); ('B', set [Neg]); ('C', set [Zero])])
 
-let k = prettyPrint [([("x",Pos); ("y", Neg); ("z", Zero)],[('A',set[Pos]);('B', set[Neg]); ('C', set[Zero])])]  ["x";"y";"z"] ['A';'B';'C']
 // ------------------------- Security Analysis ------------------------- //
 let rec fvA aExp =
     match aExp with
