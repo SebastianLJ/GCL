@@ -24,8 +24,7 @@ open SecurityTypesAST
 // We specify the return type of each of then non-terminal symbols
 %type <Choice> start
 %type <Choice> init
-%type <SecurityLattice> securityExp
-%type <SecurityLattice> securityElem
+%type <SecurityLattice> securityLattice
 %type <SecurityClassification> securityClassification
 
 // Grammar productions
@@ -45,14 +44,11 @@ start: init EOF             { $1 }
 // written in the yacc format:
 
 init:
-    | securityExp                                                { SecurityLatInit($1) }
+    | securityLattice                                            { SecurityLatInit($1) }
     | securityClassification                                     { SecurityClassInit($1) }
-
-securityExp:
-    | VAR LtSEPARATOR securityElem                              { MulLevel($1, $3) }
-securityElem:
-    | VAR LtSEPARATOR securityElem                              { MulLevel($1,$3) }
-    | VAR                                                       { Level($1) }
+securityLattice:
+    | VAR LtSEPARATOR VAR                                        { Level($1,$3) }                                      
+    | securityLattice SEPARATOR securityLattice                  { MulLevel($1,$3) }
 securityClassification:
     | VAR ASSIGN VAR                                            { InitVar($1, $3) }
     | ARRAY ASSIGN VAR                                          { InitArr($1, $3) }

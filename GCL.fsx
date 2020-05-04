@@ -538,7 +538,27 @@ let initializeConcreteMemory inputMem =
     | ConcreteMemory mem -> initializeCMemory ([],[]) mem
     | _                  -> failwith "This is not a concrete memory!"
 
+let rec SecLatTupToLst x lst =
+    match x with
+    | MulLevel(secL1, secL2) ->  SecLatTupToLst secL2 (SecLatTupToLst secL1 lst)
+    | Level(s1,s2) -> (s1,s2)::lst
+
+let LatticeChoice ch =
+    match ch with
+    |SecurityLatInit x -> SecLatTupToLst x []
+    |_ -> failwith "Error! Not a security lattice"
+let rec SecClassTupToLst x lst =
+    match x with
+    |InitSeq(secC1, secC2) -> SecClassTupToLst secC2 (SecClassTupToLst secC1 lst)
+    |InitArr (c, s) -> (string c,s)::lst
+    |InitVar(s1,s2) -> (s1,s2)::lst
+let ClassChoice ch =
+    match ch with
+    |SecurityClassInit x -> SecClassTupToLst x []
+    |_ -> failwith "Error! Not a security classification"   
+
 // ------------------------- User Interface ------------------------- //
+
 let rec getUserInputDOrNd e =
     printfn "Deterministic or non-deterministic program graph (d/nd)?"
     let pg = Console.ReadLine()
@@ -609,18 +629,15 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
-                Console.WriteLine("Specify Security Lattice and give security classification for variables and arrays (press enter after each choice) : ")
-                let first = Console.ReadLine()
-                let parsedFirst = parseSecurity first
-                printfn "test1: %A" parsedFirst              
-                let second = Console.ReadLine()
-                let parsedSecond = parseSecurity second
-                printfn "test2: %A" parsedSecond              
-                // TODO Implement
-                let secLattice = [("public", "public"); ("public", "private"); ("private", "private")]
-                let secClass = [("x", "public"); ("y", "public"); ("z", "public")]              
-                secure e (getAllowedFlows secClass secClass secLattice)
-                
+                    Console.WriteLine("Specify Security Lattice")
+                    let inputLattice = Console.ReadLine()
+                    let parsedLattice = parseSecurity inputLattice
+                    Console.WriteLine("Give security classifications for arrays and variables")
+                    let inputClassification = Console.ReadLine()
+                    let parsedClassification = parseSecurity inputClassification
+                    let secLattice = LatticeChoice parsedLattice
+                    let secClass = ClassChoice parsedClassification            
+                    secure e (getAllowedFlows secClass secClass secLattice)
                 with err -> printfn "%s" (err.Message)
         with err -> printfn "Invalid Syntax!"
 

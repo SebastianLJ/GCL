@@ -1,8 +1,8 @@
 ﻿module SecurityTypesAST
 
 type SecurityLattice =
-    | MulLevel of string * SecurityLattice
-    | Level of string
+    | Level of string * string
+    | MulLevel of SecurityLattice * SecurityLattice
 
 type SecurityClassification =
     |InitVar of string * string
