@@ -629,10 +629,10 @@ let rec guardedCommandLanguageRunner n =
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 3 then
                 try
-                    Console.WriteLine("Specify Security Lattice")
+                    Console.WriteLine("Specify Security Lattice: ")
                     let inputLattice = Console.ReadLine()
                     let parsedLattice = parseSecurity inputLattice
-                    Console.WriteLine("Give security classifications for arrays and variables")
+                    Console.WriteLine("\nGive security classifications for arrays and variables: ")
                     let inputClassification = Console.ReadLine()
                     let parsedClassification = parseSecurity inputClassification
                     let secLattice = LatticeChoice parsedLattice
