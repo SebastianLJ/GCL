@@ -144,7 +144,7 @@ let sem action memory =
 
 
 let transition pg sem (q, mem) =
-    let E = List.filter (fun (qStart, _, _) -> qStart = q) pg
+    let E = List.filter (fun (qFrom, _, _) -> qFrom = q) pg
     let rec trans edges =
         match edges with
         | [] -> []
@@ -155,12 +155,18 @@ let transition pg sem (q, mem) =
 
 let rec iterate pg sem (q, mem) c =
     match transition pg sem (q, mem) with
-    | [] -> printfn "%A" (q, mem)
-            (q, mem)
-    | t :: _ when c > 0 -> printfn "%A" t
-                           iterate pg sem t (c - 1)
-    | _ -> printfn "%A" (q, mem)
-           (q, mem)
+    | [] -> (q, mem)
+    | t :: _ when c > 0 -> iterate pg sem t (c - 1)
+    | _ -> (q, mem)
+
+let rec transSystem pg sem (q, mem) c startConf acc =
+    match transition pg sem (q, mem) with
+    | [] -> (startConf, (q,mem))::acc
+    | ts when c > 0 -> List.fold (fun acc conf -> transSystem pg sem conf (c-1) (q,mem) acc) ((startConf,(q,mem))::acc) ts
+    | _ -> (startConf, (q,mem))::acc
+    
+let makeTransSystem pg memStart =
+    transSystem pg sem ("qStart", memStart) 40 ("qStart", memStart) []
 
 let interpret pg memStart =
     iterate pg sem ("qStart", memStart) 40

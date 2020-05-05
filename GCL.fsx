@@ -5,7 +5,7 @@ open Microsoft.FSharp.Collections
 // This script implements GCL
 
 // We need to import a couple of modules, including the generated lexer and parser
-#r "C:/Users/Noah/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
+#r "C:/Users/emils/.nuget/packages/fslexyacc/10.0.0/build/fsyacc/net46/FsLexYacc.Runtime.dll"
 open FSharp.Text.Lexing
 
 #load "GCL/GCLTypesAST.fs"
@@ -486,6 +486,23 @@ let rec getAllowedFlows secClassFull secClassLoop secLattice =
     | (var, secLevel)::xs -> (makeFlows var (secLevel::getSecFlows secLevel secLattice) secClassFull)@getAllowedFlows secClassFull xs secLattice
     | _ -> []
     
+// ------------------------- Model Checker ------------------------- //
+
+let rec reachOne states trans (acc:Set<'a>) =
+    match trans with
+    | [] -> acc
+    | (s1,s2)::ts when Set.contains s1 states -> reachOne states ts (acc.Add s2)
+    | _::ts -> reachOne states ts acc
+    
+let rec explorer visited toExplore trans acc =
+    match toExplore with
+    | [] -> acc
+    | s::ss when List.contains s visited -> explorer visited ss trans acc
+    | s::ss -> let newVisited = s::visited
+               let reachable = reachOne (set[s]) trans (set[])
+               match reachable.IsEmpty with
+               | true -> explorer newVisited ss trans (s::acc)
+               | false -> explorer newVisited (ss @ Set.toList reachable) trans acc
 
 // ------------------------- Parser Methods ------------------------- //
 
@@ -565,9 +582,11 @@ let rec getUserInputDOrNd e =
     if (pg = "nd") then
         let programGraph = (edgesC "qStart" "qEnd" e 1)
         printfn "NPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
+        programGraph
     elif (pg = "d") then
         let programGraph = (edgesD "qStart" "qEnd" e 1)
         printfn "DPG: \n%A\n\nGraphViz formatted text: \n%s" programGraph (graphVizify programGraph)
+        programGraph
     else getUserInputDOrNd e
 
 let rec getUserInputChooseEnvironment choice =
@@ -582,6 +601,20 @@ let rec getUserInputChooseEnvironment choice =
         int choice
     with _ -> getUserInputChooseEnvironment choice  
        
+let rec getUserInputChooseStepWiseOrFinal choice =
+    printfn "Press 1 for step-wise execution and 2 for resulting configurations"
+    let choice = Console.ReadLine()
+    try
+        if int choice = 1 then
+            printfn ""
+            int choice
+        else if int choice = 2 then
+            printfn ""
+            int choice 
+        else
+            getUserInputChooseStepWiseOrFinal choice
+    with err -> getUserInputChooseStepWiseOrFinal choice
+    
 // We implement here the function that interacts with the user
 let rec guardedCommandLanguageRunner n =
     printfn "Enter a program in the Guarded Commands Language (variable name zero is reserved for sign analysis): "
@@ -590,7 +623,7 @@ let rec guardedCommandLanguageRunner n =
     else
         try
             let e = parse input
-            getUserInputDOrNd e
+            let pg = getUserInputDOrNd e
             
             let environmentMode = getUserInputChooseEnvironment ""
             
@@ -598,9 +631,17 @@ let rec guardedCommandLanguageRunner n =
                 try
                     Console.WriteLine("Enter the initial memory: ")
                     let initialMem = Console.ReadLine()
-                    let k = parseInitMem initialMem
-                    let memory2 = initializeConcreteMemory k
-                    printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
+                    let inputMemory = parseInitMem initialMem
+                    let parsedMemory = initializeConcreteMemory inputMemory
+                    
+                    let choice = getUserInputChooseStepWiseOrFinal ""
+                    
+                    if choice = 1 then
+                        printfn "%s" (generateTerminalInformation (interpret pg parsedMemory))
+                    else
+                        let transSystem = makeTransSystem pg parsedMemory
+                        let endStates = explorer [] [("qStart", parsedMemory)] transSystem []
+                        printfn "%s" (List.fold (fun acc conf -> acc + generateTerminalInformation conf + "\n") "" endStates)
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
                 try
