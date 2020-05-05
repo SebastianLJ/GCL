@@ -590,7 +590,6 @@ let rec guardedCommandLanguageRunner n =
     else
         try
             let e = parse input
-            Console.WriteLine("Parsed tokens (AST): {0} ", e)
             getUserInputDOrNd e
             
             let environmentMode = getUserInputChooseEnvironment ""
@@ -600,9 +599,7 @@ let rec guardedCommandLanguageRunner n =
                     Console.WriteLine("Enter the initial memory: ")
                     let initialMem = Console.ReadLine()
                     let k = parseInitMem initialMem
-                    printf "k: %A \n" k
                     let memory2 = initializeConcreteMemory k
-                    printfn "Initial memory: %A \n" memory2
                     printfn "%s" (generateTerminalInformation (interpret (edgesD "qStart" "qEnd" e 1) memory2))
                 with err -> printfn "%s" (err.Message)
             elif environmentMode = 2 then
@@ -611,7 +608,6 @@ let rec guardedCommandLanguageRunner n =
                     let initialMem = Console.ReadLine()
                     let parsedMemory = parseInitMem initialMem
                     let memory = initializeAbstractMemory parsedMemory
-                    printfn "Initial abstract memory: %A \n" memory
                     let mutable collectionOfMems = Set.empty.Add(memory)
                     let mutable reply="Y"
                     while(reply="Y") do
