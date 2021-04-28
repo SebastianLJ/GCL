@@ -1,4 +1,4 @@
-This folder contains examples of "calculator" programs in F# and Java tha read an arithmetic expression from the command line and print the result of evaluating such expression.
+This folder contains examples of "calculator" programs in F# and Java that read an arithmetic expression from the command line and print the result of evaluating such expression.
 
 ## Files
 
